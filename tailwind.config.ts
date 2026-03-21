@@ -9,11 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        "402": {
+          DEFAULT: "#f97316",
+          light: "#fb923c",
+          dim: "#431407",
+        },
+      },
+      fontFamily: {
+        mono: ["Space Mono", "monospace"],
+        sans: ["IBM Plex Sans", "sans-serif"],
+      },
+      boxShadow: {
+        "402": "0 0 20px rgba(249, 115, 22, 0.25)",
+        "402-lg": "0 0 40px rgba(249, 115, 22, 0.35)",
       },
     },
   },
   plugins: [],
 };
+
 export default config;
