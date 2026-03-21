@@ -8,7 +8,7 @@ export const PARENTS = [
     display: "402bot",
     suffix: ".eth",
     description: "AI agent bots & automation",
-    icon: "🤖",
+    icon: "/icon-bot.png",
     color: "#f97316",
   },
   {
@@ -18,7 +18,7 @@ export const PARENTS = [
     display: "402api",
     suffix: ".eth",
     description: "API endpoints & services",
-    icon: "⚡",
+    icon: "/icon-api.png",
     color: "#fb923c",
   },
   {
@@ -28,7 +28,7 @@ export const PARENTS = [
     display: "402mcp",
     suffix: ".eth",
     description: "MCP protocol integrations",
-    icon: "🔗",
+    icon: "/icon-mcp.png",
     color: "#fdba74",
   },
 ] as const;

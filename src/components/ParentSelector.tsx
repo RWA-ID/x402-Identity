@@ -33,7 +33,7 @@ export function ParentSelector({ selected, onSelect }: ParentSelectorProps) {
             {isSelected && (
               <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_#f97316]" />
             )}
-            <div className="text-2xl mb-2">{parent.icon}</div>
+            <img src={parent.icon} alt={parent.label} className="w-10 h-10 mb-2 object-contain" />
             <div className="font-mono font-bold text-[#f0f0f0] mb-1">{parent.label}</div>
             <div className="text-sm text-[#666]">{parent.description}</div>
           </motion.button>
