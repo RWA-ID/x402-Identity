@@ -6,7 +6,7 @@ import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
-const REGISTRAR    = "0x9d95cb7966b36ffe0a05de1c922e5991ac553082";
+const REGISTRAR    = "0x0a9b0d20e9193dc5479ab98154124f4e2f569444";
 const NAME_WRAPPER = "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401";
 
 const NAME_WRAPPER_ABI = [

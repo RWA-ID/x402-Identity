@@ -18,7 +18,7 @@ export const wagmiConfig = createConfig({
   chains: [mainnet, sepolia],
   connectors: [
     injected(),
-    walletConnect({ projectId: PROJECT_ID }),
+    walletConnect({ projectId: PROJECT_ID, showQrModal: true }),
   ],
   transports: {
     [mainnet.id]: http(ALCHEMY_MAINNET),

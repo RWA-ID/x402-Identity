@@ -33,10 +33,17 @@ async function main() {
   console.log("Balance:", Number(balance) / 1e18, "ETH");
 
   console.log("\nDeploying X402SubnameRegistrar to mainnet...");
+  // Get current gas price + 20% buffer
+  const gasPrice = await publicClient.getGasPrice();
+  const gasPriceWithBuffer = gasPrice * 120n / 100n;
+  console.log("Gas price (gwei):", Number(gasPriceWithBuffer) / 1e9);
+
   const hash = await walletClient.deployContract({
     abi: artifact.abi,
     bytecode: artifact.bytecode,
     args: [NAME_WRAPPER, ENS_REGISTRY, PUBLIC_RESOLVER],
+    maxFeePerGas: gasPriceWithBuffer,
+    maxPriorityFeePerGas: gasPriceWithBuffer,
   });
 
   console.log("Tx hash:", hash);

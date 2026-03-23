@@ -125,7 +125,9 @@ contract X402SubnameRegistrar is Ownable, ReentrancyGuard {
         }
 
         // Check registrar is approved operator on NameWrapper
-        address parentOwner = ensRegistry.owner(parentNode);
+        // Use nameWrapper.ownerOf() — ensRegistry.owner() returns the NameWrapper
+        // contract address for wrapped names, not the actual holder.
+        address parentOwner = nameWrapper.ownerOf(uint256(parentNode));
         require(
             nameWrapper.isApprovedForAll(parentOwner, address(this)),
             "Registrar not approved as operator"
@@ -179,7 +181,7 @@ contract X402SubnameRegistrar is Ownable, ReentrancyGuard {
                 require(existing == address(0), "Label already taken");
             } catch { }
 
-            address parentOwner = ensRegistry.owner(parentNode);
+            address parentOwner = nameWrapper.ownerOf(uint256(parentNode));
             require(
                 nameWrapper.isApprovedForAll(parentOwner, address(this)),
                 "Registrar not approved as operator"
