@@ -14,8 +14,8 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
 
   const tweetText = encodeURIComponent(
     names.length === 1
-      ? `Just minted ${names[0]} on @x402identity's x402 Identity Hub! 🤖⚡\n\nYour ENS subdomain as an AI agent identity — fully onchain, permanent.\n\nMint yours at x402id.eth 👇\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
-      : `Just minted ${names.length} ENS subnames on @x402identity's x402 Identity Hub! 🤖⚡\n\n${names.join(" · ")}\n\nMint yours at x402id.eth 👇\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
+      ? `Just minted ${names[0]} on @x402identity's x402 Identity Hub! 🤖⚡\n\nYour ENS subdomain as an AI agent identity — fully onchain, permanent.\n\nMint yours 👇 https://x402id.eth.link\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
+      : `Just minted ${names.length} ENS subnames on @x402identity's x402 Identity Hub! 🤖⚡\n\n${names.join(" · ")}\n\nMint yours 👇 https://x402id.eth.link\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
   );
 
   return (

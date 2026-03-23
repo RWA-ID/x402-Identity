@@ -4,7 +4,7 @@
 
 Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.005 ETH each. No renewals, no expiry, no middlemen. The name is yours forever.
 
-🌐 **Live:** [x402id.eth.limo](https://x402id.eth.limo)
+🌐 **Live:** [x402id.eth.link](https://x402id.eth.link)
 🐦 **Twitter/X:** [@x402identity](https://twitter.com/x402identity)
 
 ---
@@ -28,7 +28,7 @@ x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS 
 **`X402SubnameRegistrar`** — deployed on Ethereum mainnet.
 
 ```
-0x9d95cb7966b36ffe0a05de1c922e5991ac553082
+0x0a9b0d20e9193dc5479ab98154124f4e2f569444
 ```
 
 The registrar interacts directly with the ENS **NameWrapper** contract to issue permanent subnames. Key functions:
@@ -91,7 +91,7 @@ Create `.env.local`:
 NEXT_PUBLIC_REOWN_PROJECT_ID=your_walletconnect_project_id
 NEXT_PUBLIC_ALCHEMY_MAINNET=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
 NEXT_PUBLIC_ALCHEMY_SEPOLIA=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-NEXT_PUBLIC_REGISTRAR_ADDRESS=0x9d95cb7966b36ffe0a05de1c922e5991ac553082
+NEXT_PUBLIC_REGISTRAR_ADDRESS=0x0a9b0d20e9193dc5479ab98154124f4e2f569444
 NEXT_PUBLIC_CHAIN_ID=1
 ```
 

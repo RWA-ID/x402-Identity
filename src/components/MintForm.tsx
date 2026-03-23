@@ -19,6 +19,7 @@ export function MintForm() {
   const [labelInput, setLabelInput] = useState("");
   const [rows, setRows] = useState<MintRowType[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [mintedRows, setMintedRows] = useState<MintRowType[]>([]);
   const idGen = useId();
 
   const single = useRegister();
@@ -27,8 +28,14 @@ export function MintForm() {
   const isPending = single.isPending || batch.isPending;
   const isConfirming = single.isConfirming || batch.isConfirming;
 
-  // Show success modal when tx confirms
+  // Capture minted rows and show success modal when tx confirms
   if ((single.isSuccess || batch.isSuccess) && !showSuccess) {
+    const captured = rows.length > 0
+      ? rows
+      : selectedParent
+        ? [{ id: "0", parent: selectedParent, label: labelInput.trim().toLowerCase() }]
+        : [];
+    setMintedRows(captured);
     setShowSuccess(true);
   }
 
@@ -171,11 +178,14 @@ export function MintForm() {
 
       {showSuccess && (
         <SuccessModal
-          minted={rows.length > 0 ? rows : selectedParent ? [{ id: "0", parent: selectedParent, label: labelInput }] : []}
+          minted={mintedRows}
           onClose={() => {
             setShowSuccess(false);
+            setMintedRows([]);
             setRows([]);
             setLabelInput("");
+            single.reset();
+            batch.reset();
           }}
         />
       )}

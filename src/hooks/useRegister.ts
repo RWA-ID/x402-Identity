@@ -7,7 +7,7 @@ import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 export function useRegister() {
   const chainId = useChainId();
   const addr = chainId === 1 ? ADDRESSES.mainnet.registrar : ADDRESSES.sepolia.registrar;
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { writeContract, reset, data: hash, isPending, error } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
@@ -21,5 +21,5 @@ export function useRegister() {
     });
   };
 
-  return { register, hash, isPending, isConfirming, isSuccess, error };
+  return { register, reset, hash, isPending, isConfirming, isSuccess, error };
 }
