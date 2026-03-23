@@ -1,28 +1,34 @@
 "use client";
 
-import { createConfig, http } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
-import { injected, walletConnect } from "wagmi/connectors";
+import { createAppKit } from "@reown/appkit/react";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { mainnet, sepolia, type AppKitNetwork } from "@reown/appkit/networks";
 
 export const PROJECT_ID =
   process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "14a7517e58438b8651397de394d4aba9";
 
-const ALCHEMY_MAINNET =
-  process.env.NEXT_PUBLIC_ALCHEMY_MAINNET ||
-  "https://eth-mainnet.g.alchemy.com/v2/mfe6RJbAFZV4xDgQ0iSaA";
-const ALCHEMY_SEPOLIA =
-  process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA ||
-  "https://eth-sepolia.g.alchemy.com/v2/mfe6RJbAFZV4xDgQ0iSaA";
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, sepolia];
 
-export const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia],
-  connectors: [
-    injected(),
-    walletConnect({ projectId: PROJECT_ID, showQrModal: true }),
-  ],
-  transports: {
-    [mainnet.id]: http(ALCHEMY_MAINNET),
-    [sepolia.id]: http(ALCHEMY_SEPOLIA),
+export const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId: PROJECT_ID,
+  ssr: false,
+});
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  projectId: PROJECT_ID,
+  metadata: {
+    name: "x402 Identity Hub",
+    description: "Mint ENS subnames for AI agents — fully onchain.",
+    url: "https://x402id.eth.link",
+    icons: ["https://x402id.eth.link/favicon.ico"],
   },
-  ssr: false, // static export (IPFS) — no SSR hydration needed
+  features: {
+    analytics: false,
+    email: false,
+    socials: [],
+  },
+  themeMode: "dark",
 });

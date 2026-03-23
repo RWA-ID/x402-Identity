@@ -3,8 +3,7 @@
 import "./globals.css";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { wagmiConfig } from "@/lib/wagmi";
-import { WalletConnectErrorBoundary } from "@/components/WalletConnectErrorBoundary";
+import { wagmiAdapter } from "@/lib/wagmi";
 import { useState } from "react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,11 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#f97316" />
       </head>
       <body className="antialiased">
-        <WalletConnectErrorBoundary>
-          <WagmiProvider config={wagmiConfig}>
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-          </WagmiProvider>
-        </WalletConnectErrorBoundary>
+        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   );

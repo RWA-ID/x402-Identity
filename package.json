@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@coinbase/wallet-sdk": "^4.3.7",
+    "@nomicfoundation/hardhat-verify": "^3.0.12",
     "@reown/appkit": "^1.8.19",
     "@reown/appkit-adapter-wagmi": "^1.8.19",
     "@tanstack/react-query": "^5.91.3",
+    "@wagmi/core": "^2.22.1",
     "@walletconnect/ethereum-provider": "^2.23.8",
+    "@walletconnect/modal": "^2.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.38.0",
@@ -22,7 +25,7 @@
     "react": "^18",
     "react-dom": "^18",
     "viem": "^2.47.5",
-    "wagmi": "^2.11.3"
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.1.3",

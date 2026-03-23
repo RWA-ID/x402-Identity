@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
+import { useAccount, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/Button";
 
 export function ConnectButton() {
+  const { open } = useAppKit();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const [open, setOpen] = useState(false);
 
   if (isConnected && address) {
     return (
@@ -24,26 +23,8 @@ export function ConnectButton() {
   }
 
   return (
-    <div className="relative">
-      <Button onClick={() => setOpen((v) => !v)} size="md">
-        Connect Wallet
-      </Button>
-      {open && (
-        <div className="absolute right-0 top-12 z-50 bg-[#111] border border-[#2a2a2a] rounded-xl p-2 min-w-[180px] shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-          {connectors.map((connector) => (
-            <button
-              key={connector.uid}
-              onClick={() => {
-                connect({ connector });
-                setOpen(false);
-              }}
-              className="w-full text-left px-3 py-2.5 font-mono text-sm text-[#ccc] hover:text-[#f97316] hover:bg-[rgba(249,115,22,0.07)] rounded-lg transition-colors"
-            >
-              {connector.name}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <Button onClick={() => open()} size="md">
+      Connect Wallet
+    </Button>
   );
 }
