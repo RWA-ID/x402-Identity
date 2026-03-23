@@ -61,10 +61,10 @@ The registrar interacts directly with the ENS **NameWrapper** contract to issue 
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeifps52vjyv4tf7fahvpczuvrkyhiwogpbz3iqf274gyyeumeoadfm`
+**IPFS CID:** `bafybeie4wcfkhddzzw7k4xw6z6qqqbviwckxvjgsxlft6bdv4xisj3yui4`
 
 ```
-https://ipfs.io/ipfs/bafybeifps52vjyv4tf7fahvpczuvrkyhiwogpbz3iqf274gyyeumeoadfm/
+https://ipfs.io/ipfs/bafybeie4wcfkhddzzw7k4xw6z6qqqbviwckxvjgsxlft6bdv4xisj3yui4/
 ```
 
 ---
