@@ -28,7 +28,7 @@ x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS 
 **`X402SubnameRegistrar`** — deployed on Ethereum mainnet.
 
 ```
-0x0a9b0d20e9193dc5479ab98154124f4e2f569444
+0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633
 ```
 
 The registrar interacts directly with the ENS **NameWrapper** contract to issue permanent subnames. Key functions:
@@ -61,10 +61,10 @@ The registrar interacts directly with the ENS **NameWrapper** contract to issue 
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeia2z2ke6hniysmpy56plqfvuwrrtpuj2z6mcpeccszaztbz5kwxp4`
+**IPFS CID:** `bafybeic5qzvqbkpc6f2xsz7qukx2gxyyvbj2whlhciwqq7a42h3djztkp4`
 
 ```
-https://ipfs.io/ipfs/bafybeia2z2ke6hniysmpy56plqfvuwrrtpuj2z6mcpeccszaztbz5kwxp4/
+https://ipfs.io/ipfs/bafybeic5qzvqbkpc6f2xsz7qukx2gxyyvbj2whlhciwqq7a42h3djztkp4/
 ```
 
 ---
@@ -91,7 +91,7 @@ Create `.env.local`:
 NEXT_PUBLIC_REOWN_PROJECT_ID=your_walletconnect_project_id
 NEXT_PUBLIC_ALCHEMY_MAINNET=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
 NEXT_PUBLIC_ALCHEMY_SEPOLIA=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-NEXT_PUBLIC_REGISTRAR_ADDRESS=0x0a9b0d20e9193dc5479ab98154124f4e2f569444
+NEXT_PUBLIC_REGISTRAR_ADDRESS=0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633
 NEXT_PUBLIC_CHAIN_ID=1
 ```
 

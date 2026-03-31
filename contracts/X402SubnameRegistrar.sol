@@ -133,14 +133,14 @@ contract X402SubnameRegistrar is Ownable, ReentrancyGuard {
             "Registrar not approved as operator"
         );
 
-        // Mint: permanent subname, full control for minter, no fuses burned
+        // Mint: permanent subname, PARENT_CANNOT_CONTROL burned → minter truly owns it
         bytes32 node = nameWrapper.setSubnodeRecord(
             parentNode,
             label,
             msg.sender,
             publicResolver,
             0,                    // TTL
-            0,                    // fuses = PARENT_CANNOT_CONTROL not set → revocable by parent
+            65536,                // PARENT_CANNOT_CONTROL burned → parent cannot revoke
             type(uint64).max      // max expiry = permanent
         );
 
@@ -193,7 +193,7 @@ contract X402SubnameRegistrar is Ownable, ReentrancyGuard {
                 msg.sender,
                 publicResolver,
                 0,
-                0,
+                65536,            // PARENT_CANNOT_CONTROL burned → minter truly owns it
                 type(uint64).max
             );
 
