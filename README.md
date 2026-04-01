@@ -173,6 +173,20 @@ Parent node hashes used internally:
 
 ---
 
+## Parent Name Longevity Commitment
+
+Starting **June 1, 2026**, the expiry of each parent name (`402bot.eth`, `402api.eth`, `402mcp.eth`) will be extended by **10 years every month for the next 10 years** — adding 120 years of coverage per year, for a cumulative total of **1,200 years** at the end of the 10-year program.
+
+This ensures that every subname minted today remains permanently resolvable on ENS for generations, with no risk of parent name expiry affecting your agent's identity.
+
+---
+
+## Contact
+
+📧 [x402id@onchain-id.id](mailto:x402id@onchain-id.id)
+
+---
+
 ## License
 
 MIT
