@@ -74,14 +74,40 @@ const publicClient = createPublicClient({ chain: mainnet, transport });
 const walletClient = createWalletClient({ account, chain: mainnet, transport });
 
 console.log("Wallet:", account.address);
-console.log("Fetching all SubnameMinted events from block", DEPLOY_BLOCK.toString(), "...\n");
+console.log("Fetching all SubnameMinted events via Etherscan...\n");
 
-// ── 1. Fetch all mint events ──────────────────────────────────────────────────
-const logs = await publicClient.getLogs({
-  address: REGISTRAR,
-  event: REGISTRAR_ABI[0],
-  fromBlock: DEPLOY_BLOCK,
-  toBlock: "latest",
+// ── 1. Fetch all mint events via Etherscan (avoids Alchemy free-tier log limit) ──
+const ETHERSCAN_KEY = process.env.ETHERSCAN_API_KEY;
+if (!ETHERSCAN_KEY) throw new Error("ETHERSCAN_API_KEY not set in .env.local");
+
+// SubnameMinted topic0
+const TOPIC0 = "0x8fd05628e8c8091170a3b692a1bcb11cf2b13b6020e3ff27b62753bfaa419b0d";
+
+const esUrl = `https://api.etherscan.io/v2/api?chainid=1&module=logs&action=getLogs` +
+  `&address=${REGISTRAR}&topic0=${TOPIC0}` +
+  `&fromBlock=${DEPLOY_BLOCK}&toBlock=latest&apikey=${ETHERSCAN_KEY}`;
+
+const esRes  = await fetch(esUrl);
+const esJson = await esRes.json();
+
+if (esJson.status !== "1" && esJson.result?.length === 0) {
+  console.log("No SubnameMinted events found.");
+  process.exit(0);
+}
+if (esJson.status !== "1") {
+  throw new Error("Etherscan error: " + esJson.message + " — " + esJson.result);
+}
+
+// Decode logs: topic1 = parentNode (indexed), data = abi.encode(label, subnameNode, minter, fee)
+import { decodeAbiParameters, parseAbiParameters } from "viem";
+
+const logs = esJson.result.map(log => {
+  const parentNode = log.topics[1]; // indexed bytes32
+  const decoded = decodeAbiParameters(
+    parseAbiParameters("string label, bytes32 subnameNode, address minter, uint256 fee"),
+    log.data
+  );
+  return { parentNode, label: decoded[0], subnameNode: decoded[1] };
 });
 
 console.log(`Found ${logs.length} minted subnames.\n`);
@@ -95,7 +121,7 @@ if (logs.length === 0) {
 const seen = new Set();
 const names = [];
 for (const log of logs) {
-  const { parentNode, label, subnameNode } = log.args;
+  const { parentNode, label, subnameNode } = log;
   if (!seen.has(subnameNode)) {
     seen.add(subnameNode);
     names.push({ parentNode, label, subnameNode });
