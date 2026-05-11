@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/Button";
+import { useState } from "react";
 import type { MintRow } from "@/types";
 
 type SuccessModalProps = {
@@ -11,88 +10,92 @@ type SuccessModalProps = {
 
 export function SuccessModal({ minted, onClose }: SuccessModalProps) {
   const names = minted.map((r) => `${r.label}.${r.parent.label}`);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const tweetText = encodeURIComponent(
     names.length === 1
-      ? `Just minted ${names[0]} on @x402identity's x402 Identity Hub! 🤖⚡\n\nYour ENS subdomain as an AI agent identity — fully onchain, permanent.\n\nMint yours 👇 https://x402id.eth.link\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
-      : `Just minted ${names.length} ENS subnames on @x402identity's x402 Identity Hub! 🤖⚡\n\n${names.join(" · ")}\n\nMint yours 👇 https://x402id.eth.link\n\n#x402 #ENS #AIagents #Web3 #Ethereum`
+      ? `Just minted ${names[0]} on @x402identity's x402 Identity Hub.\n\nPermanent onchain identity for AI agents under 402bot.eth / 402api.eth / 402mcp.eth.\n\nMint yours: https://x402id.eth.link`
+      : `Just minted ${names.length} ENS subnames on @x402identity's x402 Identity Hub.\n\n${names.join(" · ")}\n\nMint yours: https://x402id.eth.link`,
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md bg-[#111] border border-[#1f1f1f] rounded-2xl p-6 shadow-[0_0_60px_rgba(249,115,22,0.2)]"
-      >
-        {/* Header */}
-        <div className="text-center mb-6">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="text-5xl mb-3"
-          >
-            🎉
-          </motion.div>
-          <h2 className="font-mono text-xl font-bold text-[#f97316]">Successfully Minted!</h2>
-          <p className="text-sm text-[#666] mt-1 font-mono">Your ENS subnames are live onchain</p>
-        </div>
+  const copy = (text: string) => {
+    navigator.clipboard?.writeText(text);
+    setCopied(text);
+    setTimeout(() => setCopied((c) => (c === text ? null : c)), 1200);
+  };
 
-        {/* Minted names */}
-        <div className="space-y-2 mb-5">
-          {names.map((name) => (
-            <div
-              key={name}
-              className="flex items-center justify-between p-3 bg-[#0a0a0a] border border-[#f97316]/20 rounded-lg group"
-            >
-              <span className="font-mono text-[#f0f0f0] text-sm">{name}</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => navigator.clipboard.writeText(name)}
-                  className="text-xs font-mono text-[#444] hover:text-[#f97316] transition-colors"
-                >
-                  Copy
+  return (
+    <div className="success-panel">
+      <div className="success-head">
+        <span className="success-eyebrow">
+          <span className="success-dot" />
+          Confirmed on Ethereum
+        </span>
+        <h3 className="success-title">
+          {names.length === 1 ? "Name minted." : `${names.length} names minted.`}
+        </h3>
+        <p className="success-sub">
+          Wrapped on the NameWrapper with permanence fuses burned. Yours forever.
+        </p>
+      </div>
+
+      <div className="success-list">
+        {minted.map((r, i) => {
+          const full = names[i];
+          return (
+            <div key={r.id ?? full} className="success-row">
+              <span className="success-name">
+                <b>{r.label}</b>
+                <span className="success-parent">.{r.parent.label}</span>
+              </span>
+              <div className="success-actions">
+                <button className="success-link" onClick={() => copy(full)}>
+                  {copied === full ? "Copied" : "Copy"}
                 </button>
                 <a
-                  href={`https://app.ens.domains/${name}`}
+                  className="success-link"
+                  href={`https://app.ens.domains/${full}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-mono text-[#444] hover:text-[#f97316] transition-colors"
                 >
                   ENS ↗
                 </a>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Share & promo */}
+      <a
+        href={`https://twitter.com/intent/tweet?text=${tweetText}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn-primary"
+        style={{ width: "100%", marginTop: 18, height: 46 }}
+      >
+        Share on X <span className="arrow">→</span>
+      </a>
+
+      <div className="success-promo">
+        Share your post and reply to{" "}
         <a
-          href={`https://twitter.com/intent/tweet?text=${tweetText}`}
+          href="https://twitter.com/x402identity"
           target="_blank"
           rel="noopener noreferrer"
-          className="block"
+          style={{ color: "var(--accent)" }}
         >
-          <Button size="lg" className="w-full mb-3">
-            Share on X (Twitter)
-          </Button>
-        </a>
+          @x402identity
+        </a>{" "}
+        to claim one free additional subdomain. First come, first served.
+      </div>
 
-        <div className="p-3 bg-[rgba(249,115,22,0.05)] border border-[#f97316]/20 rounded-lg mb-4 text-center">
-          <p className="text-xs font-mono text-[#f97316]">
-            🎁 Share your tweet & qualify for ONE free additional subdomain!
-          </p>
-          <p className="text-xs font-mono text-[#666] mt-1">
-            DM or reply to <span className="text-[#f97316]">@x402identity</span> to claim.
-            First come, first served.
-          </p>
-        </div>
-
-        <Button variant="ghost" size="sm" className="w-full" onClick={onClose}>
-          Mint More
-        </Button>
-      </motion.div>
+      <button
+        className="btn btn-ghost"
+        style={{ width: "100%", marginTop: 12 }}
+        onClick={onClose}
+      >
+        Mint more
+      </button>
     </div>
   );
 }

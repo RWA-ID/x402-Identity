@@ -195,6 +195,20 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
         </div>
 
         <div className="drawer-body">
+          {showSuccess ? (
+            <SuccessModal
+              minted={mintedRows}
+              onClose={() => {
+                setShowSuccess(false);
+                setMintedRows([]);
+                setRows([]);
+                setLabelInput("");
+                single.reset();
+                batch.reset();
+              }}
+            />
+          ) : (
+            <>
           <span className="field-label">Namespace</span>
           <div className="parent-options">
             {PARENTS.map((p) => (
@@ -335,22 +349,10 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
               ))}
             </div>
           )}
+            </>
+          )}
         </div>
       </aside>
-
-      {showSuccess && (
-        <SuccessModal
-          minted={mintedRows}
-          onClose={() => {
-            setShowSuccess(false);
-            setMintedRows([]);
-            setRows([]);
-            setLabelInput("");
-            single.reset();
-            batch.reset();
-          }}
-        />
-      )}
     </>
   );
 }

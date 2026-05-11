@@ -771,6 +771,69 @@ footer {
 .sec-head h2 { max-width: 22ch; }
 .sec-head p { font-size: 16px; color: var(--ink-2); max-width: 60ch; line-height: 1.6; }
 
+/*-- Success panel (inside drawer) ---------------------------------------------------------*/
+.success-panel {
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp .35s cubic-bezier(.2,.7,.2,1) both;
+}
+.success-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.success-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: #1F8A5B;
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.success-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #1F8A5B;
+  box-shadow: 0 0 0 3px rgba(31,138,91,0.15);
+}
+.success-title {
+  font-family: var(--sans);
+  font-size: 22px; font-weight: 500;
+  color: var(--ink); letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.success-sub {
+  font-size: 13px; color: var(--muted); line-height: 1.55;
+  max-width: 44ch;
+}
+.success-list {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 4px;
+}
+.success-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.success-name {
+  font-family: var(--mono); font-size: 13px; color: var(--ink);
+}
+.success-name b { color: var(--accent); font-weight: 500; }
+.success-parent { color: var(--ink-2); }
+.success-actions { display: flex; gap: 12px; }
+.success-link {
+  background: none; border: 0; padding: 0;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--muted); cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  transition: color .15s ease;
+}
+.success-link:hover { color: var(--accent); }
+.success-promo {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--radius);
+  background: var(--accent-tint);
+  font-family: var(--mono); font-size: 11px;
+  color: var(--ink-2); line-height: 1.55;
+  text-align: center;
+}
+
 .fade-up { animation: fadeUp .7s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
