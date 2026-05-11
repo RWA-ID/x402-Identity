@@ -19,7 +19,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <meta property="og:title" content="x402 Identity Hub" />
         <meta property="og:description" content="Mint permanent ENS subnames for your AI agents." />
-        <meta name="theme-color" content="#f97316" />
+        <meta name="theme-color" content="#0080BC" />
+        <meta name="google-site-verification" content="OtVg0C9NspzC28KBeFogk7gNEoAaVdJrJiPxoa7JuxY" />
+        <meta name="keywords" content="x402, x402 identity, ENS subnames, AI agent identity, 402bot, 402api, 402mcp, onchain identity, ENS, Ethereum Name Service, AI agent ENS, x402 protocol, web3 identity" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://x402id.eth.link/" />
+        <meta property="og:image" content="https://x402id.eth.link/icon-bot.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="x402 Identity Hub" />
+        <meta name="twitter:description" content="Mint permanent ENS subnames for your AI agents under 402bot.eth, 402api.eth, 402mcp.eth." />
+        <link rel="canonical" href="https://x402id.eth.link/" />
       </head>
       <body className="antialiased">
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
