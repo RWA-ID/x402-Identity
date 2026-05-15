@@ -118,10 +118,10 @@ import { namehash, parseEther } from "viem";
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeiaormyfhznlcqhv2vayuv2jbwi3ynkrcz4mlc663dhjbr7baceruq`
+**IPFS CID:** `bafybeigwlahfgu33wpn6hq5cnnj6p3ruagqsui4sewesx2ffs3javvuxhy`
 
 ```
-https://ipfs.io/ipfs/bafybeiaormyfhznlcqhv2vayuv2jbwi3ynkrcz4mlc663dhjbr7baceruq/
+https://ipfs.io/ipfs/bafybeigwlahfgu33wpn6hq5cnnj6p3ruagqsui4sewesx2ffs3javvuxhy/
 ```
 
 ---
