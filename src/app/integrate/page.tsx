@@ -15,7 +15,7 @@ const SNIPPET_HTML = `<!-- 1. Container where the widget will mount -->
 <!-- 2. Loader script -->
 <script src="https://x402id.eth.link/embed.js" async></script>`;
 
-const SNIPPET_REACT = `import { X402Widget } from "@x402id/widget-react";
+const SNIPPET_REACT = `import { X402Widget } from "@x402identity/widget-react";
 import { mainnet } from "viem/chains";
 import { namehash, parseEther } from "viem";
 
@@ -128,7 +128,7 @@ export default function IntegratePage() {
             context if present, or falls back to <span className="mono">window.ethereum</span>.
           </p>
           <div style={{ marginTop: 16, padding: "12px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--bg-sunk)" }}>
-            <code className="mono" style={{ fontSize: 13 }}>npm install @x402id/widget-react viem</code>
+            <code className="mono" style={{ fontSize: 13 }}>npm install @x402identity/widget-react viem</code>
           </div>
           <div style={{ marginTop: 16, position: "relative", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden", background: "var(--bg-sunk)" }}>
             <Code id="embed-react" code={SNIPPET_REACT} />

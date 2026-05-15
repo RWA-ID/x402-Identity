@@ -1,5 +1,5 @@
 {
-  "name": "@x402id/widget-react",
+  "name": "@x402identity/widget-react",
   "version": "0.1.0",
   "description": "Drop-in React widget for x402 Identity Hub subname registration with per-platform fees.",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "viem": "^2.0.0"
   },
   "dependencies": {
-    "@x402id/widget-core": "*"
+    "@x402identity/widget-core": "^0.1.0"
   },
   "devDependencies": {
     "@types/react": "^18"

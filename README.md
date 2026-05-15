@@ -67,11 +67,11 @@ External platforms can earn from registrations by mounting the x402id widget and
 ### Option 2 — React / Next.js
 
 ```bash
-npm install @x402id/widget-react viem
+npm install @x402identity/widget-react viem
 ```
 
 ```tsx
-import { X402Widget } from "@x402id/widget-react";
+import { X402Widget } from "@x402identity/widget-react";
 import { mainnet } from "viem/chains";
 import { namehash, parseEther } from "viem";
 
@@ -118,10 +118,10 @@ import { namehash, parseEther } from "viem";
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeigrr7skyhxmkrjpop3sr76xy5ut4mjmxzl4ngob6xqs4llkresliy`
+**IPFS CID:** `bafybeiaormyfhznlcqhv2vayuv2jbwi3ynkrcz4mlc663dhjbr7baceruq`
 
 ```
-https://ipfs.io/ipfs/bafybeigrr7skyhxmkrjpop3sr76xy5ut4mjmxzl4ngob6xqs4llkresliy/
+https://ipfs.io/ipfs/bafybeiaormyfhznlcqhv2vayuv2jbwi3ynkrcz4mlc663dhjbr7baceruq/
 ```
 
 ---

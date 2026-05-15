@@ -13,7 +13,7 @@ import {
   isAvailable,
   registerVia,
   validateLabel,
-} from "@x402id/widget-core";
+} from "@x402identity/widget-core";
 import { injectStyles } from "./styles.js";
 import {
   connectInjected,

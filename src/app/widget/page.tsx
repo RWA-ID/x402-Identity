@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { namehash, isAddress, type Address, type Hex } from "viem";
 import { mainnet } from "viem/chains";
-import { X402Widget } from "@x402id/widget-react";
+import { X402Widget } from "@x402identity/widget-react";
 
 const FORWARDER: Address = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";

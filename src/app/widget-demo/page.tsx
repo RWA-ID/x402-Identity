@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { namehash, parseEther, type Address } from "viem";
 import { mainnet } from "viem/chains";
-import { X402Widget } from "@x402id/widget-react";
+import { X402Widget } from "@x402identity/widget-react";
 
 const FORWARDER: Address = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
@@ -29,7 +29,7 @@ export default function WidgetDemoPage() {
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
         <h1 style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>x402id widget — demo</h1>
         <p style={{ opacity: 0.7, marginBottom: 24 }}>
-          Smoke-test of <code>@x402id/widget-react</code> against the live mainnet forwarder at{" "}
+          Smoke-test of <code>@x402identity/widget-react</code> against the live mainnet forwarder at{" "}
           <a href={`https://etherscan.io/address/${FORWARDER}`} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>{FORWARDER.slice(0, 10)}…</a>
         </p>
 
