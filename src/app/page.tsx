@@ -106,6 +106,7 @@ export default function Home() {
             <a href="#architecture">Architecture</a>
             <a href="#permanence">Permanence</a>
             <a href="#developers">Developers</a>
+            <a href="/integrate/">Integrate</a>
           </nav>
           <NavConnect onMint={() => openDrawer()} />
         </div>
@@ -583,6 +584,7 @@ export default function Home() {
                 <li><a href="#namespaces">Namespaces</a></li>
                 <li><a href="#architecture">Architecture</a></li>
                 <li><a href="#metrics">Live metrics</a></li>
+                <li><a href="/integrate/">Integrate (platforms)</a></li>
               </ul>
             </div>
             <div className="foot-col">
