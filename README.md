@@ -23,25 +23,82 @@ x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS 
 
 ---
 
-## Smart Contract
+## Smart Contracts
 
-**`X402SubnameRegistrar`** — deployed on Ethereum mainnet.
+Two contracts on Ethereum mainnet, both Etherscan-verified.
 
-```
-0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633
-```
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| `X402SubnameRegistrar` | [`0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633`](https://etherscan.io/address/0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633) | Mints permanent ENS subnames under the supported parents |
+| `X402RegistrarForwarder` | [`0x05af104ce913e7ef39799bfada871817d3761778`](https://etherscan.io/address/0x05af104ce913e7ef39799bfada871817d3761778) | Splits payment between protocol and a third-party platform's treasury in a single tx |
 
 The registrar interacts directly with the ENS **NameWrapper** contract to issue permanent subnames. Key functions:
 
 | Function | Description |
 |----------|-------------|
-| `register(node, label, owner)` | Mint a single subname |
-| `batchRegister(node, labels[], owner)` | Mint multiple subnames in one tx |
+| `register(node, label)` | Mint a single subname |
+| `batchRegister(nodes[], labels[])` | Mint multiple subnames in one tx |
 | `isAvailable(node, label)` | Check if a subname is available |
-| `withdrawFees(token)` | Owner: withdraw accumulated ETH |
+| `withdrawFees()` | Owner: withdraw accumulated ETH |
 
-**Mint fee:** 0.005 ETH per name  
-**Batch:** Up to 10 names per transaction
+**Mint fee:** 0.005 ETH per name (protocol fee)  
+**Batch:** Up to 10 names per transaction  
+**Platform fee:** 0–0.05 ETH on top of the protocol fee, paid to a platform's treasury via the forwarder (see below)
+
+---
+
+## Platform Integration
+
+External platforms can earn from registrations by mounting the x402id widget and setting their own platform fee — paid atomically to a treasury address they specify. The forwarder enforces a 0.05 ETH cap on platform fees and the breakdown is shown to users line-by-line before they sign.
+
+**Full integration guide:** [x402id.eth.link/integrate](https://x402id.eth.link/integrate)
+
+### Option 1 — drop-in for any site
+
+```html
+<div data-x402id
+     data-treasury="0xYourPlatformTreasury"
+     data-platform-fee-wei="1000000000000000"
+     data-parents="402bot.eth,402api.eth,402mcp.eth"
+     data-theme="light"></div>
+<script src="https://x402id.eth.link/embed.js" async></script>
+```
+
+### Option 2 — React / Next.js
+
+```bash
+npm install @x402id/widget-react viem
+```
+
+```tsx
+import { X402Widget } from "@x402id/widget-react";
+import { mainnet } from "viem/chains";
+import { namehash, parseEther } from "viem";
+
+<X402Widget
+  registrar="0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633"
+  forwarder="0x05af104ce913e7ef39799bfada871817d3761778"
+  parents={[
+    { label: "402bot.eth", node: namehash("402bot.eth") },
+    { label: "402api.eth", node: namehash("402api.eth") },
+    { label: "402mcp.eth", node: namehash("402mcp.eth") },
+  ]}
+  platformTreasury="0xYourPlatformTreasury"
+  platformFeeWei={parseEther("0.001")}
+  chain={mainnet}
+/>
+```
+
+### Widget repo layout
+
+| Path | What it is |
+|------|------------|
+| `contracts/X402RegistrarForwarder.sol` | Payment-splitting forwarder, ERC1155-receiver, owner-tunable fee cap |
+| `packages/widget-core/` | Framework-agnostic viem helpers (ABIs, validation, tx builders) |
+| `packages/widget-react/` | `<X402Widget>` component with fallback connect UI, zero-dep styling |
+| `public/embed.js` | Vanilla script-tag loader for non-React sites |
+| `src/app/widget/` | Standalone widget page (iframe target for `embed.js`) |
+| `src/app/integrate/` | Public integrator-facing docs page |
 
 ---
 
@@ -61,10 +118,10 @@ The registrar interacts directly with the ENS **NameWrapper** contract to issue 
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeic5qzvqbkpc6f2xsz7qukx2gxyyvbj2whlhciwqq7a42h3djztkp4`
+**IPFS CID:** `bafybeigc3rc7kxpd5vefl4bsuo6by3sx3jr3zdjm5skhtw6f2b4fyd72pm`
 
 ```
-https://ipfs.io/ipfs/bafybeic5qzvqbkpc6f2xsz7qukx2gxyyvbj2whlhciwqq7a42h3djztkp4/
+https://ipfs.io/ipfs/bafybeigc3rc7kxpd5vefl4bsuo6by3sx3jr3zdjm5skhtw6f2b4fyd72pm/
 ```
 
 ---

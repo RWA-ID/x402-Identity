@@ -1,0 +1,24 @@
+{
+  "name": "@x402id/widget-core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic core for the x402 Identity Hub registration widget.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  },
+  "files": ["dist", "src"],
+  "sideEffects": false
+}

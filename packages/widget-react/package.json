@@ -1,0 +1,31 @@
+{
+  "name": "@x402id/widget-react",
+  "version": "0.1.0",
+  "description": "Drop-in React widget for x402 Identity Hub subname registration with per-platform fees.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "viem": "^2.0.0"
+  },
+  "dependencies": {
+    "@x402id/widget-core": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18"
+  },
+  "files": ["dist", "src"],
+  "sideEffects": false
+}
