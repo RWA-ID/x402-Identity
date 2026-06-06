@@ -6,7 +6,7 @@ import { mainnet, sepolia, type AppKitNetwork } from "@reown/appkit/networks";
 import { http } from "wagmi";
 
 export const PROJECT_ID =
-  process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "14a7517e58438b8651397de394d4aba9";
+  process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "43bdd1b8c477ac4d4a4264a14a8472f8";
 
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, sepolia];
 
