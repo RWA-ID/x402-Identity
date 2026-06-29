@@ -8,6 +8,39 @@ import { LiveMetrics } from "@/components/LiveMetrics";
 
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
 
+function GitHubIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.9-.01 3.29 0 .32.22.7.83.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z" />
+    </svg>
+  );
+}
+
+function EtherscanIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 293.775 293.671" fill="currentColor" aria-hidden="true">
+      <path d="M61.0411 138.4127a12.2645 12.2645 0 0 1 12.32-12.2589l20.43.0667a12.2769 12.2769 0 0 1 12.2769 12.2769v77.2517c2.3014-.6821 5.2567-1.4083 8.49-2.168a10.2293 10.2293 0 0 0 7.8987-9.9568V107.5957a12.2772 12.2772 0 0 1 12.2765-12.2774h20.4734a12.2772 12.2772 0 0 1 12.2765 12.2774v75.0235s5.1264-2.0743 10.1193-4.1824a10.2387 10.2387 0 0 0 6.2542-9.43V76.8439a12.2766 12.2766 0 0 1 12.2756-12.2765h20.4742a12.2772 12.2772 0 0 1 12.2769 12.2769v50.5188c17.7491-12.8634 35.7361-28.3334 50.005-46.9329a4.9292 4.9292 0 0 0 .7507-4.6716A146.927 146.927 0 0 0 73.355 18.6359a3.0747 3.0747 0 0 0-2.314 5.8881z" />
+      <path d="M60.6147 184.2438a146.9128 146.9128 0 0 0 231.74-118.3061c0-3.2289-.114-6.4322-.32-9.6106-53.6411 80.025-152.789 117.2256-231.42 127.9167z" />
+    </svg>
+  );
+}
+
+function EnsIcon() {
+  return (
+    <svg width="13" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M11.725.223 5.107 11.13a.146.146 0 0 1-.237.018c-.583-.692-2.753-3.64-.067-6.327 2.45-2.452 5.572-4.2 6.73-4.804.13-.068.269.08.192.206m-.366 23.747c.132.093.295-.064.206-.2-1.478-2.251-6.392-9.744-7.07-10.869-.67-1.11-1.987-2.953-2.097-4.53-.011-.158-.228-.19-.283-.042a10 10 0 0 0-.27.85c-1.105 4.11.5 8.472 3.985 10.916zm.909-.193 6.618-10.907a.146.146 0 0 1 .237-.018c.582.692 2.753 3.64.067 6.327-2.45 2.452-5.572 4.2-6.73 4.804-.13.068-.269-.08-.192-.206M12.641.028c-.132-.093-.295.065-.206.2 1.478 2.252 6.392 9.745 7.07 10.87.67 1.109 1.987 2.952 2.097 4.53.011.157.228.19.283.041.088-.239.182-.524.27-.85 1.105-4.11-.5-8.472-3.985-10.915z" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z" />
+    </svg>
+  );
+}
+
 function CopyBtn({ text, className = "btn btn-ghost copy-btn" }: { text: string; className?: string }) {
   const [label, setLabel] = useState("Copy");
   return (
@@ -119,7 +152,7 @@ export default function Home() {
             <span className="dot" />
             Ethereum mainnet · live
           </span>
-          <h1 style={{ marginTop: 32 }}>Permanent onchain identity for AI agents.</h1>
+          <h1 style={{ marginTop: 32 }}>Permanent onchain identity for x402 agents.</h1>
           <p className="lede" style={{ marginTop: 28 }}>
             ENS subnames under{" "}
             <span className="mono" style={{ color: "var(--ink)" }}>402bot.eth</span>,{" "}
@@ -574,7 +607,7 @@ export default function Home() {
                 <span className="brand-sub">/ identity hub</span>
               </a>
               <p className="foot-tag">
-                Permanent onchain identity for AI agents — issued under 402bot.eth, 402api.eth, and 402mcp.eth.
+                Permanent onchain identity for x402 agents — issued under 402bot.eth, 402api.eth, and 402mcp.eth.
               </p>
             </div>
             <div className="foot-col">
@@ -590,9 +623,9 @@ export default function Home() {
             <div className="foot-col">
               <h4>Resources</h4>
               <ul>
-                <li><a href="https://github.com/RWA-ID/x402-Identity" target="_blank" rel="noopener">GitHub ↗</a></li>
-                <li><a href={`https://etherscan.io/address/${REGISTRAR}`} target="_blank" rel="noopener">Contract ↗</a></li>
-                <li><a href="https://app.ens.domains" target="_blank" rel="noopener">ENS Manager ↗</a></li>
+                <li><a href="https://github.com/RWA-ID/x402-Identity" target="_blank" rel="noopener"><span className="foot-ico"><GitHubIcon /></span>GitHub ↗</a></li>
+                <li><a href={`https://etherscan.io/address/${REGISTRAR}`} target="_blank" rel="noopener"><span className="foot-ico"><EtherscanIcon /></span>Contract ↗</a></li>
+                <li><a href="https://app.ens.domains" target="_blank" rel="noopener"><span className="foot-ico"><EnsIcon /></span>ENS Manager ↗</a></li>
                 <li><a href="#">Audit (pending)</a></li>
               </ul>
             </div>
@@ -600,7 +633,7 @@ export default function Home() {
               <h4>Contact</h4>
               <ul>
                 <li><a href="mailto:x402id@onchain-id.id">x402id@onchain-id.id</a></li>
-                <li><a href="https://twitter.com/x402identity" target="_blank" rel="noopener">@x402identity ↗</a></li>
+                <li><a href="https://twitter.com/x402identity" target="_blank" rel="noopener"><span className="foot-ico"><XIcon /></span>@x402identity ↗</a></li>
                 <li><a href="#">License · MIT</a></li>
               </ul>
             </div>

@@ -546,6 +546,8 @@ footer {
 .foot-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .foot-col a { font-size: 13px; color: var(--ink-2); }
 .foot-col a:hover { color: var(--accent); }
+.foot-col a .foot-ico { display: inline-flex; vertical-align: -2px; margin-right: 8px; opacity: .85; }
+.foot-col a:hover .foot-ico { opacity: 1; }
 .foot-tag {
   margin-top: 16px; max-width: 38ch;
   font-size: 13px; color: var(--muted); line-height: 1.6;

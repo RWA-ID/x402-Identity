@@ -2,6 +2,7 @@
 const nextConfig = {
   output: "export",      // static export for IPFS / ENS contenthash
   trailingSlash: true,   // ensures clean paths when served from IPFS gateways
+  staticPageGenerationTimeout: 300, // slow prerender of wallet-heavy client pages
   images: {
     unoptimized: true,   // next/image needs this for static export
   },
