@@ -34,6 +34,19 @@ import { namehash, parseEther } from "viem";
   onSuccess={(label, parentNode, txHash) => console.log("minted", label, txHash)}
 />`;
 
+const SNIPPET_MCP = `{
+  "mcpServers": {
+    "x402id": {
+      "command": "npx",
+      "args": ["-y", "@x402identity/mcp"],
+      "env": {
+        "X402_PLATFORM_TREASURY": "0xYourPlatformTreasury",
+        "X402_PLATFORM_FEE_WEI": "1000000000000000"
+      }
+    }
+  }
+}`;
+
 function Code({ id, code }: { id: string; code: string }) {
   const [label, setLabel] = useState("Copy");
   return (
@@ -59,10 +72,26 @@ function Code({ id, code }: { id: string; code: string }) {
 export default function IntegratePage() {
   return (
     <main>
+      <header className="nav">
+        <div className="wrap nav-inner">
+          <a className="brand" href="/" aria-label="x402 Identity Hub">
+            <span className="brand-mark">x</span>
+            <span>x402</span>
+            <span className="brand-sub">/ identity hub</span>
+          </a>
+          <nav className="links">
+            <a href="/">Home</a>
+            <a href="/#namespaces">Namespaces</a>
+            <a href="/#architecture">Architecture</a>
+            <a href="/#developers">Developers</a>
+          </nav>
+        </div>
+      </header>
+
       <section style={{ padding: "80px 0 40px" }}>
         <div className="wrap">
           <div className="eyebrow">Integrate</div>
-          <h1 style={{ maxWidth: "20ch", marginTop: 16 }}>Earn from x402 registrations on your platform.</h1>
+          <h1 style={{ maxWidth: "20ch", marginTop: 16 }}>Earn from x402id registrations on your platform.</h1>
           <p className="lede" style={{ maxWidth: "60ch", marginTop: 24 }}>
             Drop the x402id widget into your site and set your own platform fee. Users get a permanent ENS
             subname under <span className="mono">402bot.eth</span>, <span className="mono">402api.eth</span>,
@@ -133,6 +162,36 @@ export default function IntegratePage() {
           <div style={{ marginTop: 16, position: "relative", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden", background: "var(--bg-sunk)" }}>
             <Code id="embed-react" code={SNIPPET_REACT} />
           </div>
+        </div>
+      </section>
+
+      <section className="section-divider" style={{ padding: "48px 0" }}>
+        <div className="wrap">
+          <h2>3. MCP server for AI agents</h2>
+          <p style={{ marginTop: 16, maxWidth: "60ch", color: "var(--muted)" }}>
+            Let agents mint their own identities. The official MCP server exposes availability checks,
+            pricing, minting, and resolution as tools for Claude, Cursor, or any MCP-compatible client.
+            By default it runs <strong>prepare-only</strong> — mint tools return an encoded transaction for
+            the user&apos;s wallet to sign, no key custody. Set <span className="mono">X402_PRIVATE_KEY</span> for
+            autonomous agent minting.
+          </p>
+          <div style={{ marginTop: 16, padding: "12px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--bg-sunk)" }}>
+            <code className="mono" style={{ fontSize: 13 }}>npx -y @x402identity/mcp</code>
+          </div>
+          <div style={{ marginTop: 16, position: "relative", border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden", background: "var(--bg-sunk)" }}>
+            <Code id="embed-mcp" code={SNIPPET_MCP} />
+          </div>
+          <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>
+            <strong>Tools:</strong>{" "}
+            <span className="mono">check_availability</span>, <span className="mono">get_price</span>,{" "}
+            <span className="mono">register_subname</span>, <span className="mono">batch_register</span>,{" "}
+            <span className="mono">resolve_identity</span>, <span className="mono">list_names</span>.
+            The optional platform env vars route mints through the forwarder so you earn the same fee as
+            the widget — leave them out for fee-free protocol pricing.{" "}
+            <a href="https://www.npmjs.com/package/@x402identity/mcp" target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+              @x402identity/mcp on npm
+            </a>
+          </p>
         </div>
       </section>
 
