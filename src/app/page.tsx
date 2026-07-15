@@ -634,6 +634,8 @@ export default function Home() {
               <ul>
                 <li><a href="mailto:x402id@onchain-id.id">x402id@onchain-id.id</a></li>
                 <li><a href="https://twitter.com/x402identity" target="_blank" rel="noopener"><span className="foot-ico"><XIcon /></span>@x402identity ↗</a></li>
+                <li><a href="/privacy/">Privacy Policy</a></li>
+                <li><a href="/terms/">Terms &amp; Conditions</a></li>
                 <li><a href="#">License · MIT</a></li>
               </ul>
             </div>
