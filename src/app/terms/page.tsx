@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Terms & Conditions — x402 Identity Hub",
   description:
     "Terms of use for x402 Identity Hub — a non-custodial, open-source interface for minting ENS subnames for AI agents.",
-  alternates: { canonical: "https://x402id.eth.link/terms/" },
-};
+  path: "/terms/",
+});
 
 const UPDATED = "July 14, 2026";
 

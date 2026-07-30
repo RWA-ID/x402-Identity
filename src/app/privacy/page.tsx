@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Privacy Policy — x402 Identity Hub",
   description:
     "How x402 Identity Hub handles data: a fully client-side, IPFS-hosted dapp with no accounts, no cookies, and no analytics.",
-  alternates: { canonical: "https://x402id.eth.link/privacy/" },
-};
+  path: "/privacy/",
+});
 
 const UPDATED = "July 14, 2026";
 

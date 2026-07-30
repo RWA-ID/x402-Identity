@@ -1,52 +1,71 @@
-"use client";
-
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { wagmiAdapter } from "@/lib/wagmi";
-import { useState } from "react";
+import { Providers } from "./providers";
+
+const SITE = "https://x402id.eth.link";
+const OG_ALT =
+  "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";
+
+// metadataBase lets every page express canonical/og:image as a relative path and
+// still emit absolute URLs, which is what scrapers require.
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
+  title: "x402 Identity Hub",
+  description:
+    "Mint ENS subnames under 402bot.eth, 402api.eth, 402mcp.eth — your AI agent identity onchain.",
+  keywords: [
+    "x402",
+    "x402 identity",
+    "ENS subnames",
+    "AI agent identity",
+    "402bot",
+    "402api",
+    "402mcp",
+    "onchain identity",
+    "ENS",
+    "Ethereum Name Service",
+    "AI agent ENS",
+    "x402 protocol",
+    "web3 identity",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "x402 Identity Hub",
+    url: "/",
+    title: "x402 Identity Hub",
+    description: "Mint permanent ENS subnames for your AI agents.",
+    images: [{ url: "/og.png", width: 1200, height: 630, type: "image/png", alt: OG_ALT }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@x402identity",
+    creator: "@x402identity",
+    title: "x402 Identity Hub",
+    description:
+      "Mint permanent ENS subnames for your AI agents under 402bot.eth, 402api.eth, 402mcp.eth.",
+    images: [{ url: "/og.png", alt: OG_ALT }],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  verification: { google: "OtVg0C9NspzC28KBeFogk7gNEoAaVdJrJiPxoa7JuxY" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0080BC",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
     <html lang="en">
-      <head>
-        <title>x402 Identity Hub</title>
-        <meta
-          name="description"
-          content="Mint ENS subnames under 402bot.eth, 402api.eth, 402mcp.eth — your AI agent identity onchain."
-        />
-        <meta property="og:title" content="x402 Identity Hub" />
-        <meta property="og:description" content="Mint permanent ENS subnames for your AI agents." />
-        <meta name="theme-color" content="#0080BC" />
-        <meta name="google-site-verification" content="OtVg0C9NspzC28KBeFogk7gNEoAaVdJrJiPxoa7JuxY" />
-        <meta name="keywords" content="x402, x402 identity, ENS subnames, AI agent identity, 402bot, 402api, 402mcp, onchain identity, ENS, Ethereum Name Service, AI agent ENS, x402 protocol, web3 identity" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://x402id.eth.link/" />
-        <meta property="og:site_name" content="x402 Identity Hub" />
-        <meta property="og:image" content="https://x402id.eth.link/og.png" />
-        <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth." />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@x402identity" />
-        <meta name="twitter:creator" content="@x402identity" />
-        <meta name="twitter:title" content="x402 Identity Hub" />
-        <meta name="twitter:description" content="Mint permanent ENS subnames for your AI agents under 402bot.eth, 402api.eth, 402mcp.eth." />
-        <meta name="twitter:image" content="https://x402id.eth.link/og.png" />
-        <meta name="twitter:image:alt" content="x402 Identity Hub — permanent onchain identity for x402 agents." />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="canonical" href="https://x402id.eth.link/" />
-      </head>
       <body className="antialiased">
-        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        </WagmiProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
