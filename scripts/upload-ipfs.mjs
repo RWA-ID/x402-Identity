@@ -1,7 +1,14 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
+import { config } from "dotenv";
 
-const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxYmExNzU0YS0yNmE1LTRlNTUtYTVjNC0wMmM0OGVjMzhiNDMiLCJlbWFpbCI6ImVuc2dpYW50QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI5Y2NlOTg2YTA1MjEwMDQ4N2RlNyIsInNjb3BlZEtleVNlY3JldCI6Ijg5NWExNmE4MzU1Yjc2OTQzYjNhMjdiZjE2YzMzZDQ2YjFlY2I4MDlmMWE3Y2NjMTRiNTQxMjRhZDQyMmYyNTQiLCJleHAiOjE4MDM2NzE1ODV9.PP1eQwStDsjsoDDoa8bq078LPMaqHOsHtP6M-Vg-hUg";
+config({ path: ".env.local" });
+
+const JWT = process.env.PINATA_JWT;
+if (!JWT) {
+  console.error("Missing PINATA_JWT — add it to .env.local (see .env.example).");
+  process.exit(1);
+}
 
 const OUT_DIR = new URL("../out", import.meta.url).pathname;
 
