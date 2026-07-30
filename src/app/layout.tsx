@@ -24,10 +24,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="keywords" content="x402, x402 identity, ENS subnames, AI agent identity, 402bot, 402api, 402mcp, onchain identity, ENS, Ethereum Name Service, AI agent ENS, x402 protocol, web3 identity" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://x402id.eth.link/" />
-        <meta property="og:image" content="https://x402id.eth.link/icon-bot.png" />
+        <meta property="og:site_name" content="x402 Identity Hub" />
+        <meta property="og:image" content="https://x402id.eth.link/og.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth." />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@x402identity" />
+        <meta name="twitter:creator" content="@x402identity" />
         <meta name="twitter:title" content="x402 Identity Hub" />
         <meta name="twitter:description" content="Mint permanent ENS subnames for your AI agents under 402bot.eth, 402api.eth, 402mcp.eth." />
+        <meta name="twitter:image" content="https://x402id.eth.link/og.png" />
+        <meta name="twitter:image:alt" content="x402 Identity Hub — permanent onchain identity for x402 agents." />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="canonical" href="https://x402id.eth.link/" />
       </head>
       <body className="antialiased">
