@@ -5,7 +5,8 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "sync:embed": "cp packages/embed/embed.js public/embed.js",
+    "build": "npm run sync:embed && next build",
     "start": "next start",
     "lint": "next lint",
     "build:packages": "npm run build -w @x402identity/widget-core && npm run build -w @x402identity/widget-react"

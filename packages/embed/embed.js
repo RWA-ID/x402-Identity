@@ -8,12 +8,12 @@
  *        data-theme="light"
  *        data-parents="402bot.eth,402api.eth"
  *        data-height="520"></div>
- *   <script src="https://embed.x402id.eth.link/embed.js" async></script>
+ *   <script src="https://x402id.eth.link/embed.js" async></script>
  *
  * Each matching element becomes an iframe pointed at the hosted widget.
  */
 (function () {
-  var HOST = (window.__X402ID_HOST__ || "https://embed.x402id.eth.link").replace(/\/$/, "");
+  var HOST = (window.__X402ID_HOST__ || "https://x402id.eth.link").replace(/\/$/, "");
 
   function mount(el) {
     if (el.getAttribute("data-x402id-mounted") === "1") return;
@@ -28,7 +28,7 @@
     });
 
     var iframe = document.createElement("iframe");
-    iframe.src = HOST + "/widget?" + params.toString();
+    iframe.src = HOST + "/widget/?" + params.toString();
     iframe.title = "x402id registration widget";
     iframe.style.border = "0";
     iframe.style.width  = "100%";

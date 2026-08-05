@@ -96,9 +96,59 @@ import { namehash, parseEther } from "viem";
 | `contracts/X402RegistrarForwarder.sol` | Payment-splitting forwarder, ERC1155-receiver, owner-tunable fee cap |
 | `packages/widget-core/` | Framework-agnostic viem helpers (ABIs, validation, tx builders) |
 | `packages/widget-react/` | `<X402Widget>` component with fallback connect UI, zero-dep styling |
-| `public/embed.js` | Vanilla script-tag loader for non-React sites |
+| `packages/mcp-server/` | `@x402identity/mcp` — MCP server for agents (see below) |
+| `packages/embed/embed.js` | Vanilla script-tag loader for non-React sites — **edit this one** |
+| `public/embed.js` | Generated copy of the above (`npm run sync:embed`, runs on every build) |
 | `src/app/widget/` | Standalone widget page (iframe target for `embed.js`) |
 | `src/app/integrate/` | Public integrator-facing docs page |
+
+---
+
+## MCP Server
+
+`@x402identity/mcp` lets an AI agent claim and manage its own ENS identity directly — no browser, no widget. It speaks the [Model Context Protocol](https://modelcontextprotocol.io), so it drops into Claude Desktop, Claude Code, Cursor, or any MCP client.
+
+**npm:** [`@x402identity/mcp`](https://www.npmjs.com/package/@x402identity/mcp) · **source:** [`packages/mcp-server/`](packages/mcp-server)
+
+```json
+{
+  "mcpServers": {
+    "x402id": {
+      "command": "npx",
+      "args": ["-y", "@x402identity/mcp"]
+    }
+  }
+}
+```
+
+### Tools
+
+| Tool | What it does |
+|------|--------------|
+| `check_availability` | Validate a label and check if `label.parent` is free |
+| `get_price` | Total ETH cost for 1–10 mints (protocol fee + optional platform fee) |
+| `register_subname` | Mint one permanent subname |
+| `batch_register` | Mint up to 10 names in one transaction |
+| `resolve_identity` | ENS name → address, owner, text records |
+| `list_names` | All x402 names minted by an address (onchain events) |
+
+### Modes
+
+**Prepare-only (default)** — zero configuration, zero custody. Read tools query mainnet directly; mint tools return a fully-encoded transaction (`to`, `data`, `value`) for the caller to sign with any wallet.
+
+**Wallet mode** — set `X402_PRIVATE_KEY` and the server signs and broadcasts itself, returning the receipt. `X402_MAX_SPEND_WEI` (default 0.1 ETH) bounds worst-case loss per call.
+
+| Env var | Default | Purpose |
+|---------|---------|---------|
+| `X402_RPC_URL` | keyless public RPCs | Custom mainnet RPC (`list_names` needs full-range `eth_getLogs`) |
+| `X402_PRIVATE_KEY` | — | Enables wallet mode |
+| `X402_MAX_SPEND_WEI` | 0.1 ETH | Per-call spend cap in wallet mode |
+| `X402_PLATFORM_TREASURY` | — | Route mints through the forwarder and earn a platform fee |
+| `X402_PLATFORM_FEE_WEI` | `0` | Platform fee per mint (forwarder caps at 0.05 ETH) |
+
+Like the widget, anyone can run this server with a treasury configured and earn on every mint routed through it — paid atomically by `X402RegistrarForwarder` in the same transaction.
+
+**Full docs:** [`packages/mcp-server/README.md`](packages/mcp-server/README.md)
 
 ---
 
@@ -110,6 +160,7 @@ import { namehash, parseEther } from "viem";
 | Frontend | Next.js 14 · React 18 · TypeScript |
 | Web3 | wagmi v2 · viem v2 · WalletConnect |
 | Styling | Tailwind CSS · Framer Motion |
+| Agent interface | Model Context Protocol SDK · zod |
 | Hosting | IPFS (Pinata) · ENS contenthash |
 
 ---
@@ -190,7 +241,13 @@ node scripts/setup-viem.mjs
 ```
 x402-identity-hub/
 ├── contracts/
-│   └── X402SubnameRegistrar.sol   # Core registrar contract
+│   ├── X402SubnameRegistrar.sol   # Core registrar contract
+│   └── X402RegistrarForwarder.sol # Platform-fee payment splitter
+├── packages/
+│   ├── widget-core/               # Framework-agnostic viem helpers
+│   ├── widget-react/              # <X402Widget> React component
+│   ├── embed/                     # Script-tag loader — source of truth for public/embed.js
+│   └── mcp-server/                # @x402identity/mcp (MCP server)
 ├── scripts/
 │   ├── deploy-viem.mjs            # Mainnet deploy script (viem)
 │   ├── setup-viem.mjs             # NameWrapper approval + parent setup
