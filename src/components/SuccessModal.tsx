@@ -35,7 +35,7 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
           {names.length === 1 ? "Name minted." : `${names.length} names minted.`}
         </h3>
         <p className="success-sub">
-          Wrapped on the NameWrapper with permanence fuses burned. Yours forever.
+          Wrapped on the NameWrapper — the parent can&apos;t reclaim it. No renewals for you: it stays active as the parent names are renewed.
         </p>
       </div>
 

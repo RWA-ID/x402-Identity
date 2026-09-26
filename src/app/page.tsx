@@ -5,6 +5,9 @@ import { useAccount, useDisconnect } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { MintDrawer } from "@/components/MintDrawer";
 import { LiveMetrics } from "@/components/LiveMetrics";
+import { TokenSwap } from "@/components/TokenSwap";
+import { TOKEN } from "@/lib/token";
+import { useParentExpiries, fmtMonthYear } from "@/hooks/useParentExpiries";
 
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
 
@@ -102,6 +105,7 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [initialParent, setInitialParent] = useState<string | null>(null);
   const [tlFilled, setTlFilled] = useState(false);
+  const { parents: parentExpiries, earliest: earliestExpiry } = useParentExpiries();
 
   const openDrawer = (parent?: string) => {
     setInitialParent(parent ?? null);
@@ -137,6 +141,7 @@ export default function Home() {
             <a href="#namespaces">Namespaces</a>
             <a href="#institutions">Institutions</a>
             <a href="#architecture">Architecture</a>
+            <a href="#token">Token</a>
             <a href="#permanence">Permanence</a>
             <a href="#developers">Developers</a>
             <a href="/integrate/">Integrate</a>
@@ -158,7 +163,7 @@ export default function Home() {
             <span className="mono" style={{ color: "var(--ink)" }}>402bot.eth</span>,{" "}
             <span className="mono" style={{ color: "var(--ink)" }}>402api.eth</span>, and{" "}
             <span className="mono" style={{ color: "var(--ink)" }}>402mcp.eth</span> — issued once,
-            owned forever, resolvable on every chain.
+            no renewals for holders, resolvable on every chain.
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary btn-lg" onClick={() => openDrawer()}>
@@ -172,11 +177,11 @@ export default function Home() {
           <div className="hero-meta">
             <span><b style={{ color: "var(--ink)", fontWeight: 500 }}>0.005 ETH</b> &nbsp;per name</span>
             <span className="sep" />
-            <span>No renewals · no expiry</span>
+            <span>No renewals for holders</span>
             <span className="sep" />
             <span>NameWrapper-locked</span>
             <span className="sep" />
-            <span>Parent expiry <b style={{ color: "var(--ink)", fontWeight: 500 }}>3226 CE</b></span>
+            <span>Parents renewed from <b style={{ color: "var(--ink)", fontWeight: 500 }}>$X402ID</b> trading fees</span>
           </div>
         </div>
       </section>
@@ -418,17 +423,87 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Token */}
+      <section id="token" className="section-divider">
+        <div className="wrap">
+          <div className="sec-head">
+            <span className="index">05 / Token</span>
+            <div className="h">
+              <h2>$X402ID — the token for the Identity Hub.</h2>
+              <p>
+                Launched on Base via Bankr. Registering a name earns {TOKEN.cashbackPct}% of the mint fee back
+                in $X402ID, and trading fees flow to the x402 treasury to keep the parent names renewed.
+              </p>
+            </div>
+          </div>
+
+          <div className="contract-row">
+            <div className="meta">
+              <span className="l">$X402ID · ERC-20 · Base</span>
+              <span className="addr">{TOKEN.address}</span>
+            </div>
+            <div className="actions">
+              <CopyBtn text={TOKEN.address} />
+              <a className="btn btn-ghost" href={`https://basescan.org/token/${TOKEN.address}`} target="_blank" rel="noopener">
+                Basescan <span className="arrow">↗</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="token-grid">
+            <div className="token-facts">
+              <img
+                className="token-hero"
+                src="/token/x402id-coin.jpg"
+                alt="$X402ID coin — the token for the x402 Identity Hub, launched on Base via Bankr"
+                width={1000}
+                height={1000}
+                loading="lazy"
+              />
+              <div className="fact-list">
+                <div className="fact-row"><span className="k">Supply</span><span className="v">{TOKEN.totalSupply} · fixed, non-mintable</span></div>
+                <div className="fact-row"><span className="k">Liquidity</span><span className="v">85% in a Uniswap v4 pool paired with WETH</span></div>
+                <div className="fact-row"><span className="k">Treasury</span><span className="v">15% vesting to the x402 Safe (2-of-3) over 1 year, 30-day cliff — funds user rewards</span></div>
+                <div className="fact-row"><span className="k">Trading fees</span><span className="v">0.665% of volume to the Safe in WETH — parent-name renewals first, then development and buybacks</span></div>
+                <div className="fact-row"><span className="k">Mint cashback</span><span className="v">{TOKEN.cashbackPct}% of the 0.005 ETH fee back in $X402ID for every name registered since {TOKEN.launchDate}. Claimable on Base in monthly rounds, first round {TOKEN.cliffDate}</span></div>
+                <div className="fact-row"><span className="k">Integrators</span><span className="v">Mints through partner platforms (the forwarder) count toward the buyer&apos;s cashback</span></div>
+              </div>
+
+              <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <a className="btn btn-ghost" href={`https://bankr.bot/terminal/trade?out=${TOKEN.address}&chain=base`} target="_blank" rel="noopener">
+                  Trade on Bankr <span className="arrow">↗</span>
+                </a>
+                <a className="btn btn-ghost" href={`https://dexscreener.com/base/${TOKEN.address}`} target="_blank" rel="noopener">
+                  Chart <span className="arrow">↗</span>
+                </a>
+                <a className="btn btn-ghost" href={`https://app.safe.global/home?safe=base:${TOKEN.treasury}`} target="_blank" rel="noopener">
+                  Treasury Safe <span className="arrow">↗</span>
+                </a>
+              </div>
+
+              <p className="micro" style={{ marginTop: 20, maxWidth: "68ch", lineHeight: 1.6 }}>
+                $X402ID is a utility token for the x402 Identity Hub. It is not an investment, carries no claim
+                on revenue, and its price can go to zero. Cashback terms may change; changes are announced
+                before they take effect.
+              </p>
+            </div>
+
+            <TokenSwap />
+          </div>
+        </div>
+      </section>
+
       {/* Permanence */}
       <section id="permanence" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">05 / Permanence</span>
+            <span className="index">06 / Permanence</span>
             <div className="h">
               <h2>An identity you can build a 10-year roadmap on.</h2>
               <p>
-                Procurement teams need a guarantee, not a promise. The NameWrapper enforces immutability at
-                the protocol level, and the 1,200-year parent extension removes the only remaining failure
-                mode: the parent name itself.
+                The NameWrapper locks each subname away from the parent at mint, and holders never renew.
+                The one remaining dependency — the parent names themselves — is renewed from $X402ID trading
+                fees, paid to the x402 treasury Safe.
               </p>
             </div>
           </div>
@@ -436,77 +511,58 @@ export default function Home() {
           <div className="permanence-grid">
             <div className="perm-body">
               <h3 style={{ fontFamily: "var(--mono)", fontSize: 13, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 500 }}>
-                NameWrapper fuses, burned at mint
+                NameWrapper fuse, burned at mint
               </h3>
               <p>
-                Every subname is issued with a fixed set of ENS fuses already burned. Once set, fuses cannot
-                be cleared — by us, by the parent owner, by the registrar contract, or by a future governance
-                vote. The agent holds the name on the same terms as any 2nd-level ENS domain.
+                Every subname is issued with PARENT_CANNOT_CONTROL already burned. A burned fuse cannot be
+                cleared — by us, by the parent owner, or by the registrar contract. The holder controls
+                the name&apos;s records, resolver, and transfers.
               </p>
 
               <div className="fuse-list">
-                <div className="fuse-row">
-                  <div className="k">CANNOT_UNWRAP</div>
-                  <div className="v">The wrap cannot be removed. The fuses cannot be reset by unwrapping and rewrapping.</div>
-                </div>
                 <div className="fuse-row">
                   <div className="k">PARENT_CANNOT_CONTROL</div>
                   <div className="v">The parent owner — including us — cannot reclaim, replace, or burn the subname.</div>
                 </div>
                 <div className="fuse-row">
-                  <div className="k">CANNOT_BURN_FUSES</div>
-                  <div className="v">No additional fuses can be set after issuance. The permission set is final.</div>
+                  <div className="k">HOLDER CONTROL</div>
+                  <div className="v">Resolver, records, and transfers are set by the holder, not the parent.</div>
                 </div>
                 <div className="fuse-row">
-                  <div className="k">CANNOT_SET_RESOLVER</div>
-                  <div className="v" style={{ color: "var(--muted)" }}>Reserved — controlled by the holder, not the parent.</div>
+                  <div className="k">EXPIRY</div>
+                  <div className="v">Follows the parent. When a parent is renewed, subname expiries are extended to match — no action or fee from the holder.</div>
                 </div>
               </div>
 
               <p style={{ marginTop: 28 }}>
-                Combined with the parent longevity commitment, the procurement guarantee is simple: a name
-                minted today resolves on ENS through the year{" "}
-                <b style={{ fontFamily: "var(--mono)", color: "var(--ink)", fontWeight: 500 }}>3226</b>{" "}
-                with no required action from the holder.
+                Trading fees from $X402ID flow to the x402 treasury Safe in WETH. Parent renewals are the
+                first call on that treasury, ahead of development and buybacks, and every renewal is a
+                public transaction on Ethereum.
               </p>
             </div>
 
             <aside className="timeline">
               <div className="tl-head">
-                <span className="label">PARENT EXPIRY — 402BOT.ETH</span>
-                <span className="year">3226 CE</span>
+                <span className="label">PARENT EXPIRY — EARLIEST</span>
+                <span className="year">{fmtMonthYear(earliestExpiry)}</span>
               </div>
               <div className="tl-bar">
                 <div className="fill" id="tl-fill" style={{ width: tlFilled ? "100%" : "0%" }} />
               </div>
-              <div className="tl-axis">
-                <span>2026</span>
-                <span>2126</span>
-                <span>2526</span>
-                <span>3226</span>
-              </div>
 
               <div className="tl-rows" style={{ marginTop: 28 }}>
-                <div className="tl-row">
-                  <span className="k">YEAR 1</span>
-                  <div className="b"><i style={{ width: "10%" }} /></div>
-                  <span className="v">+120 yr</span>
-                </div>
-                <div className="tl-row">
-                  <span className="k">YEAR 5</span>
-                  <div className="b"><i style={{ width: "50%" }} /></div>
-                  <span className="v">+600 yr</span>
-                </div>
-                <div className="tl-row">
-                  <span className="k">YEAR 10</span>
-                  <div className="b"><i style={{ width: "100%" }} /></div>
-                  <span className="v">+1,200 yr</span>
-                </div>
+                {parentExpiries.map((p) => (
+                  <div className="tl-row" key={p.label}>
+                    <span className="k">{p.label.toUpperCase()}</span>
+                    <div className="b"><i style={{ width: "100%" }} /></div>
+                    <span className="v">{fmtMonthYear(p.expiry)}</span>
+                  </div>
+                ))}
               </div>
 
               <p style={{ marginTop: 22, fontFamily: "var(--mono)", fontSize: 11, color: "var(--muted)", lineHeight: 1.55 }}>
-                Starting Jun 1 2026, each parent&apos;s expiry is extended by 10 years every month for 10
-                years — adding 120 years per calendar year, 1,200 years cumulative.
+                Read live from the ENS NameWrapper. Renewed from $X402ID trading fees; subnames are
+                extended to match after each renewal.
               </p>
             </aside>
           </div>
@@ -517,7 +573,7 @@ export default function Home() {
       <section id="developers" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">06 / Integrate</span>
+            <span className="index">07 / Integrate</span>
             <div className="h">
               <h2>One contract, two calls, no SDK required.</h2>
               <p>
@@ -617,6 +673,7 @@ export default function Home() {
                 <li><a href="#namespaces">Namespaces</a></li>
                 <li><a href="#architecture">Architecture</a></li>
                 <li><a href="#metrics">Live metrics</a></li>
+                <li><a href="#token">$X402ID token</a></li>
                 <li><a href="/integrate/">Integrate (platforms)</a></li>
               </ul>
             </div>

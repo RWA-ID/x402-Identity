@@ -1,8 +1,8 @@
 # x402 Identity Hub
 
-**Permanent ENS subname registration for AI agents — fully onchain on Ethereum.**
+**ENS subname registration for AI agents — fully onchain on Ethereum.**
 
-Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.005 ETH each. No renewals, no expiry, no middlemen. The name is yours forever.
+Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.005 ETH each. No renewals for holders, no middlemen, and the parent can't take the name back. Parent names are renewed from [$X402ID](#x402id-token) trading fees.
 
 🌐 **Live:** [x402id.eth.link](https://x402id.eth.link)
 🐦 **Twitter/X:** [@x402identity](https://twitter.com/x402identity)
@@ -11,7 +11,7 @@ Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.005 ETH ea
 
 ## Overview
 
-x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS (Ethereum Name Service) infrastructure. Each minted subname is a permanent ENS record stored in the NameWrapper contract — transferable, resolvable, and composable with the broader ENS ecosystem.
+x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS (Ethereum Name Service) infrastructure. Each minted subname is an ENS record in the NameWrapper contract, locked away from the parent at mint — transferable, resolvable, and composable with the broader ENS ecosystem.
 
 ### Available Namespaces
 
@@ -29,10 +29,10 @@ Two contracts on Ethereum mainnet, both Etherscan-verified.
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| `X402SubnameRegistrar` | [`0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633`](https://etherscan.io/address/0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633) | Mints permanent ENS subnames under the supported parents |
+| `X402SubnameRegistrar` | [`0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633`](https://etherscan.io/address/0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633) | Mints ENS subnames under the supported parents |
 | `X402RegistrarForwarder` | [`0x05af104ce913e7ef39799bfada871817d3761778`](https://etherscan.io/address/0x05af104ce913e7ef39799bfada871817d3761778) | Splits payment between protocol and a third-party platform's treasury in a single tx |
 
-The registrar interacts directly with the ENS **NameWrapper** contract to issue permanent subnames. Key functions:
+The registrar interacts directly with the ENS **NameWrapper** contract to issue subnames with `PARENT_CANNOT_CONTROL` burned. Key functions:
 
 | Function | Description |
 |----------|-------------|
@@ -262,11 +262,15 @@ x402-identity-hub/
 │   │   ├── ConnectButton.tsx      # Wallet connect button
 │   │   ├── RecentMints.tsx        # Live mint feed
 │   │   ├── SuccessModal.tsx       # Post-mint confirmation + share
+│   │   ├── TokenSwap.tsx          # $X402ID swap panel (Base, via workers/swap)
 │   │   └── WalletConnectErrorBoundary.tsx
 │   └── lib/
 │       ├── wagmi.ts               # wagmi config + connectors
 │       ├── contracts.ts           # Contract addresses + ABI
+│       ├── token.ts               # $X402ID constants + swap API URL
 │       └── parents.ts             # Parent node configs (namehashes)
+├── workers/
+│   └── swap/                      # Cloudflare Worker proxying the 0x Swap API
 ├── hardhat.config.js
 ├── next.config.mjs
 └── tailwind.config.ts
@@ -287,11 +291,34 @@ Parent node hashes used internally:
 
 ---
 
-## Parent Name Longevity Commitment
+## Parent Name Renewals
 
-Starting **June 1, 2026**, the expiry of each parent name (`402bot.eth`, `402api.eth`, `402mcp.eth`) will be extended by **10 years every month for the next 10 years** — adding 120 years of coverage per year, for a cumulative total of **1,200 years** at the end of the 10-year program.
+A subname's expiry is capped at its parent's, so the parents are the one thing that must be kept alive. Current expiries (read live on the site from the NameWrapper):
 
-This ensures that every subname minted today remains permanently resolvable on ENS for generations, with no risk of parent name expiry affecting your agent's identity.
+| Parent | Expiry |
+|--------|--------|
+| `402bot.eth` | May 2029 |
+| `402api.eth` | May 2028 |
+| `402mcp.eth` | May 2028 |
+
+Parents are renewed from **$X402ID trading fees**, which accrue in WETH to the x402 treasury Safe. Renewals are the first call on that treasury, ahead of development and buybacks. After each renewal, `scripts/extend-subname-expiry.mjs` extends every existing subname to match — holders never pay or act.
+
+---
+
+## $X402ID Token
+
+| | |
+|---|---|
+| Token | [`0xb9490fc272642A7De0539FB3dC52A2769936FBa3`](https://basescan.org/token/0xb9490fc272642A7De0539FB3dC52A2769936FBa3) on Base, launched 2026-09-26 via Bankr |
+| Supply | 100,000,000,000, fixed |
+| Liquidity | 85% in a Uniswap v4 pool paired with WETH |
+| Treasury | 15% vesting over 1 year (30-day cliff) to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C) (2-of-3) |
+| Trading fees | 0.665% of volume to the Safe in WETH |
+| Mint cashback | 25% of the mint fee back in $X402ID for every name registered since launch; claimable on Base in monthly rounds from 2026-10-26 |
+
+The site's swap panel quotes through `workers/swap/`, a Cloudflare Worker that holds the 0x API key and pins every quote to ETH ↔ X402ID on Base with a 0.10% fee to the Safe.
+
+$X402ID is a utility token. It is not an investment and carries no claim on revenue.
 
 ---
 

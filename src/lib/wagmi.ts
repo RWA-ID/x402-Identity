@@ -2,16 +2,17 @@
 
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { mainnet, sepolia, type AppKitNetwork } from "@reown/appkit/networks";
+import { mainnet, base, type AppKitNetwork } from "@reown/appkit/networks";
 import { http } from "wagmi";
 
 export const PROJECT_ID =
   process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "43bdd1b8c477ac4d4a4264a14a8472f8";
 
-const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, sepolia];
+// Mainnet hosts the registrar; Base hosts $X402ID and its swap.
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, base];
 
 const ALCHEMY_MAINNET = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET;
-const ALCHEMY_SEPOLIA = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA;
+const ALCHEMY_BASE = process.env.NEXT_PUBLIC_ALCHEMY_BASE;
 
 export const wagmiAdapter = new WagmiAdapter({
   networks,
@@ -19,7 +20,7 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: false,
   transports: {
     [mainnet.id]: ALCHEMY_MAINNET ? http(ALCHEMY_MAINNET) : http(),
-    [sepolia.id]: ALCHEMY_SEPOLIA ? http(ALCHEMY_SEPOLIA) : http(),
+    [base.id]: ALCHEMY_BASE ? http(ALCHEMY_BASE) : http(),
   },
 });
 

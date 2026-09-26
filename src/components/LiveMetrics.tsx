@@ -1,6 +1,7 @@
 "use client";
 
 import { useMintStats } from "@/hooks/useMintStats";
+import { useParentExpiries, fmtMonthYear } from "@/hooks/useParentExpiries";
 import { PARENTS } from "@/lib/parents";
 
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
@@ -26,6 +27,7 @@ function relTime(ts: number) {
 
 export function LiveMetrics() {
   const { total, last } = useMintStats();
+  const { earliest: parentExpiry } = useParentExpiries();
 
   return (
     <div className="metrics">
@@ -38,8 +40,10 @@ export function LiveMetrics() {
       </div>
       <div className="metric">
         <span className="label">Parent expiry</span>
-        <span className="value">3226 CE</span>
-        <span className="sub">+1,200 years over 10-year commitment</span>
+        <span className="value">
+          {fmtMonthYear(parentExpiry)}
+        </span>
+        <span className="sub">earliest of 3 parents · renewed from $X402ID trading fees</span>
       </div>
       <div className="metric">
         <span className="label">Registrar</span>

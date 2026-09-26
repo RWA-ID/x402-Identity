@@ -1,6 +1,7 @@
 "use client";
 
-import { useWatchContractEvent, useChainId } from "wagmi";
+import { useWatchContractEvent } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { useState } from "react";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 
@@ -14,12 +15,11 @@ export type MintEvent = {
 };
 
 export function useRecentMints() {
-  const chainId = useChainId();
-  const addr = chainId === 1 ? ADDRESSES.mainnet.registrar : ADDRESSES.sepolia.registrar;
   const [mints, setMints] = useState<MintEvent[]>([]);
 
   useWatchContractEvent({
-    address: addr,
+    chainId: mainnet.id,
+    address: ADDRESSES.mainnet.registrar,
     abi: REGISTRAR_ABI,
     eventName: "SubnameMinted",
     onLogs(logs) {

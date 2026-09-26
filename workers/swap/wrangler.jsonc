@@ -1,0 +1,7 @@
+{
+  "name": "x402id-swap",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true
+  // Secret: ZEROX_API_KEY (wrangler secret put ZEROX_API_KEY) — never commit it.
+}

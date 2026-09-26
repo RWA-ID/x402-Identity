@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useChainId, useWatchContractEvent } from "wagmi";
+import { useWatchContractEvent } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { decodeAbiParameters, parseAbiParameters } from "viem";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 
@@ -29,8 +30,9 @@ type EtherscanLog = {
 };
 
 export function useMintStats() {
-  const chainId = useChainId();
-  const addr = chainId === 1 ? ADDRESSES.mainnet.registrar : ADDRESSES.sepolia.registrar;
+  // Registrar lives on mainnet only — never follow the wallet's chain.
+  const chainId = mainnet.id;
+  const addr = ADDRESSES.mainnet.registrar;
 
   const [total, setTotal] = useState<number | null>(null);
   const [last, setLast] = useState<LastMint | null>(null);
@@ -88,6 +90,7 @@ export function useMintStats() {
   }, [chainId, addr]);
 
   useWatchContractEvent({
+    chainId,
     address: addr,
     abi: REGISTRAR_ABI,
     eventName: "SubnameMinted",
