@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import type { Hex } from "viem";
-import { buildSetAddressCalls, getResolver, publicResolverAbi } from "@x402identity/widget-core";
+import { buildSetAddressCalls, getLowFees, getResolver, publicResolverAbi } from "@x402identity/widget-core";
 
 export type SetAddressState = "idle" | "signing" | "confirming" | "linked" | "failed";
 
 /**
  * Minting writes no address record, so a fresh name resolves to 0x0. This
- * points each name's ETH, default-EVM (ENSIP-19) and Base records at the
- * connected wallet in one resolver multicall. The wallet must own every name.
+ * points each name's ETH and ENSIP-19 default-EVM (Base, any EVM chain)
+ * records at the connected wallet in one resolver multicall. The wallet must
+ * own every name.
  */
 export function useSetAddress() {
   const { address, chainId } = useAccount();
@@ -28,8 +29,9 @@ export function useSetAddress() {
     try {
       if (chainId !== mainnet.id) await switchChainAsync({ chainId: mainnet.id });
       // Every name minted here shares the registrar's resolver; read it rather than assume.
-      const resolver = await getResolver(client, nodes[0]);
+      const [resolver, fees] = await Promise.all([getResolver(client, nodes[0]), getLowFees(client)]);
       const hash = await writeContractAsync({
+        ...fees,
         chainId: mainnet.id,
         address: resolver,
         abi: publicResolverAbi,

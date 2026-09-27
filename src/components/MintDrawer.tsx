@@ -10,6 +10,7 @@ import { useRegister } from "@/hooks/useRegister";
 import { useBatchRegister } from "@/hooks/useBatchRegister";
 import { useRecentMints } from "@/hooks/useRecentMints";
 import { SuccessModal } from "@/components/SuccessModal";
+import { SetAddressPanel } from "@/components/SetAddressPanel";
 import type { MintRow as MintRowType } from "@/types";
 
 type Props = {
@@ -312,6 +313,11 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
             </div>
           </div>
 
+          <p className="hint" style={{ marginTop: 0, marginBottom: 12 }}>
+            The wallet you mint with becomes your name&apos;s Ethereum and Base address. After the mint,
+            confirm one small transaction to set it.
+          </p>
+
           <button
             className="btn btn-primary"
             disabled={mintCount === 0 || isPending || isConfirming}
@@ -333,6 +339,15 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
               {(single.error || batch.error)?.message?.slice(0, 120)}
             </p>
           )}
+
+          <details className="set-address-drawer" style={{ marginTop: 22 }}>
+            <summary className="field-label" style={{ cursor: "pointer" }}>
+              Already own a name? Set its address
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <SetAddressPanel />
+            </div>
+          </details>
 
           {recent.length > 0 && (
             <div className="recent">

@@ -1,6 +1,6 @@
 {
   "name": "@x402identity/widget-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Framework-agnostic core for the x402 Identity Hub registration widget.",
   "license": "MIT",
   "type": "module",

@@ -16,6 +16,7 @@ import {
   subnameNode,
   getResolver,
   setAddress,
+  getLowFees,
 } from "@x402identity/widget-core";
 import { injectStyles } from "./styles.js";
 import {
@@ -174,7 +175,7 @@ export function X402Widget(props: X402WidgetProps) {
   }
 
   // Minting writes no address record, so a fresh name resolves to 0x0.
-  // Point it (ETH, default EVM, Base) at the minter in one resolver multicall.
+  // Point its ETH and default-EVM (Base, any EVM chain) records at the minter in one multicall.
   async function handleSetAddress(user: Address | undefined = account) {
     if (!user) return;
     setLinkError(null);
@@ -183,8 +184,8 @@ export function X402Widget(props: X402WidgetProps) {
       const wallet = props.walletClient ?? makeInjectedWalletClient(props.chain);
       if (!wallet) throw new Error("No wallet client available");
       const node = subnameNode(parent.node, label);
-      const resolver = await getResolver(pub, node);
-      const hash = await setAddress(wallet, { resolver, nodes: [node], address: user, account: user });
+      const [resolver, fees] = await Promise.all([getResolver(pub, node), getLowFees(pub)]);
+      const hash = await setAddress(wallet, { resolver, nodes: [node], address: user, account: user, fees });
       setLink("confirming");
       const receipt = await pub.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw new Error("Set address reverted");
@@ -263,6 +264,11 @@ export function X402Widget(props: X402WidgetProps) {
               )}
             </div>
           )}
+
+          <div className="x402id-msg x402id-muted">
+            The wallet you register with becomes this name&apos;s Ethereum and Base address. After the
+            mint, confirm one small transaction to set it.
+          </div>
 
           {!account ? (
             <button

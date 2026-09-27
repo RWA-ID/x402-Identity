@@ -143,30 +143,26 @@ export function SetAddressPanel() {
       </div>
 
       {lookup.kind === "ok" && isOwner && (
-        <div className="fuse-list" style={{ marginTop: 18 }}>
+        <div className="fuse-list" style={{ marginTop: 14 }}>
           <div className="fuse-row">
             <div className="k">ETHEREUM</div>
             <div className="v">{short(lookup.status.eth)}</div>
           </div>
           <div className="fuse-row">
-            <div className="k">BASE</div>
-            <div className="v">{short(lookup.status.base)}</div>
-          </div>
-          <div className="fuse-row">
-            <div className="k">ANY EVM CHAIN</div>
+            <div className="k">BASE · ANY EVM</div>
             <div className="v">{short(lookup.status.defaultEvm)}</div>
           </div>
         </div>
       )}
 
       {!isConnected ? (
-        <button className="btn btn-primary" style={{ marginTop: 18 }} onClick={() => openAppKit()}>
+        <button className="btn btn-ghost" style={{ width: "100%", marginTop: 14 }} onClick={() => openAppKit()}>
           Connect wallet <span className="arrow">→</span>
         </button>
       ) : (
         <button
-          className="btn btn-primary"
-          style={{ marginTop: 18 }}
+          className="btn btn-ghost"
+          style={{ width: "100%", marginTop: 14 }}
           disabled={!parsed || !isOwner || busy || (lookup.kind === "ok" && lookup.status.linked)}
           onClick={() => parsed && link.setAddress([parsed.node])}
         >

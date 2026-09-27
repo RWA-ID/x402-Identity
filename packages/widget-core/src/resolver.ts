@@ -20,8 +20,10 @@ export const ENS_REGISTRY: Address = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e
 export const ETH_COIN_TYPE = 60n;
 /** ENSIP-19 default EVM coin type: resolves on any EVM chain with no chain-specific record. */
 export const DEFAULT_EVM_COIN_TYPE = 0x80000000n;
-/** ENSIP-11 coin type for Base (0x80000000 | 8453) — where x402 payments settle. */
+/** ENSIP-11 coin type for Base (0x80000000 | 8453). Not written: the default EVM record covers it. */
 export const BASE_COIN_TYPE = 0x80000000n | 8453n;
+/** Tip floor for the address write — enough to be included, far below a wallet's default. */
+const MIN_PRIORITY_FEE = 10_000_000n; // 0.01 gwei
 
 export const ensRegistryAbi = [
   {
@@ -78,11 +80,9 @@ export interface AddressStatus {
   resolver: Address;
   /** Address on the ETH record (coin type 60), or null if unset. */
   eth: Address | null;
-  /** Address on the ENSIP-19 default EVM record, or null if unset. */
+  /** Address on the ENSIP-19 default EVM record (Base and every other EVM chain), or null if unset. */
   defaultEvm: Address | null;
-  /** Address on the Base record, or null if unset. */
-  base: Address | null;
-  /** True when all three records point at `expected`. */
+  /** True when both records point at `expected`. */
   linked: boolean;
 }
 
@@ -102,7 +102,7 @@ export async function getResolver(publicClient: PublicClient, node: Hex): Promis
 }
 
 /**
- * Read the name's ETH / default-EVM / Base records and compare them to `expected`.
+ * Read the name's ETH and default-EVM records and compare them to `expected`.
  * Throws if the name has no resolver — callers must not read a failed call as "unlinked".
  */
 export async function getAddressStatus(
@@ -119,22 +119,23 @@ export async function getAddressStatus(
       functionName: "addr",
       args: [node, coinType],
     }) as Promise<Hex>;
-  const [eth, defaultEvm, base] = (await Promise.all([
-    read(ETH_COIN_TYPE),
-    read(DEFAULT_EVM_COIN_TYPE),
-    read(BASE_COIN_TYPE),
-  ])).map(bytesToAddress);
+  const [eth, defaultEvm] = (await Promise.all([read(ETH_COIN_TYPE), read(DEFAULT_EVM_COIN_TYPE)])).map(
+    bytesToAddress,
+  );
   const want = getAddress(expected);
-  return { resolver, eth, defaultEvm, base, linked: eth === want && defaultEvm === want && base === want };
+  return { resolver, eth, defaultEvm, linked: eth === want && defaultEvm === want };
 }
 
-/** Calldata for the resolver calls that point one name at `addr` (ETH, default EVM, Base). */
+/**
+ * Calldata for the resolver calls that point one name at `addr`: the ETH record,
+ * plus the ENSIP-19 default EVM record so strict clients resolve it on Base too
+ * (a Base lookup never falls back to the ETH record).
+ */
 export function buildSetAddressCalls(node: Hex, addr: Address): Hex[] {
   const a = getAddress(addr);
   return [
     encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, a] }),
     encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, DEFAULT_EVM_COIN_TYPE, a] }),
-    encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, BASE_COIN_TYPE, a] }),
   ];
 }
 
@@ -151,11 +152,28 @@ export function buildSetAddressMulticall(nodes: Hex[], addr: Address): Hex {
   });
 }
 
+/**
+ * The network's own fee suggestion, with a small tip floor. Passed explicitly
+ * because wallets default to a tip ~30x the base fee on a quiet mainnet.
+ */
+export async function getLowFees(publicClient: PublicClient) {
+  const f = await publicClient.estimateFeesPerGas();
+  const maxPriorityFeePerGas = f.maxPriorityFeePerGas > MIN_PRIORITY_FEE ? f.maxPriorityFeePerGas : MIN_PRIORITY_FEE;
+  return { maxPriorityFeePerGas, maxFeePerGas: f.maxFeePerGas + maxPriorityFeePerGas };
+}
+
 export async function setAddress(
   wallet: WalletClient,
-  args: { resolver: Address; nodes: Hex[]; address: Address; account: Address },
+  args: {
+    resolver: Address;
+    nodes: Hex[];
+    address: Address;
+    account: Address;
+    fees?: { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint };
+  },
 ): Promise<Hex> {
   return wallet.writeContract({
+    ...args.fees,
     address: args.resolver,
     abi: publicResolverAbi,
     functionName: "multicall",
