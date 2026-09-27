@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MintRow } from "@/types";
+import { makeSubnameNode } from "@/lib/ens";
+import { useSetAddress } from "@/hooks/useSetAddress";
 
 type SuccessModalProps = {
   minted: MintRow[];
@@ -11,6 +13,17 @@ type SuccessModalProps = {
 export function SuccessModal({ minted, onClose }: SuccessModalProps) {
   const names = minted.map((r) => `${r.label}.${r.parent.label}`);
   const [copied, setCopied] = useState<string | null>(null);
+  const link = useSetAddress();
+  const nodes = minted.map((r) => makeSubnameNode(r.parent.node, r.label));
+
+  // A fresh name resolves to 0x0 — prompt the address signature once, right after the mint.
+  const prompted = useRef(false);
+  useEffect(() => {
+    if (prompted.current || !link.address || nodes.length === 0) return;
+    prompted.current = true;
+    void link.setAddress(nodes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [link.address]);
 
   const tweetText = encodeURIComponent(
     names.length === 1
@@ -64,6 +77,40 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
             </div>
           );
         })}
+      </div>
+
+      <div className="success-link-step">
+        {link.state === "linked" ? (
+          <p className="success-sub" style={{ color: "var(--accent)" }}>
+            {names.length === 1 ? "It now resolves" : "They now resolve"} to{" "}
+            {link.address?.slice(0, 6)}…{link.address?.slice(-4)} on Ethereum and Base.
+          </p>
+        ) : (
+          <>
+            <p className="success-sub">
+              Last step: point {names.length === 1 ? "it" : "them"} at your wallet so{" "}
+              {names.length === 1 ? "it resolves" : "they resolve"} on Ethereum and Base. Until then{" "}
+              {names.length === 1 ? "the name resolves" : "the names resolve"} to nothing.
+            </p>
+            <button
+              className="btn btn-primary"
+              style={{ width: "100%", marginTop: 12, height: 46 }}
+              onClick={() => link.setAddress(nodes)}
+              disabled={link.state === "signing" || link.state === "confirming"}
+            >
+              {link.state === "signing"
+                ? "Confirm in wallet…"
+                : link.state === "confirming"
+                  ? "Confirming on-chain…"
+                  : "Set my address"}
+            </button>
+            {link.error && (
+              <p style={{ marginTop: 8, fontFamily: "var(--mono)", fontSize: 11, color: "#B0413E" }}>
+                {link.error.slice(0, 120)}
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       <a

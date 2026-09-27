@@ -13,6 +13,9 @@ import {
   isAvailable,
   registerVia,
   validateLabel,
+  subnameNode,
+  getResolver,
+  setAddress,
 } from "@x402identity/widget-core";
 import { injectStyles } from "./styles.js";
 import {
@@ -50,7 +53,8 @@ export interface X402WidgetProps {
   onSuccess?: (label: string, parentNode: Hex, txHash: Hex) => void;
 }
 
-type Stage = "input" | "confirm" | "submitting" | "success" | "error";
+type Stage = "input" | "confirm" | "submitting" | "confirming" | "success" | "error";
+type Link = "idle" | "signing" | "confirming" | "linked" | "failed";
 
 export function X402Widget(props: X402WidgetProps) {
   useEffect(() => injectStyles(), []);
@@ -68,6 +72,8 @@ export function X402Widget(props: X402WidgetProps) {
   const [protocolFee, setProtocolFee] = useState<bigint | null>(null);
   const [maxFee, setMaxFee] = useState<bigint | null>(null);
   const [txHash, setTxHash] = useState<Hex | null>(null);
+  const [link, setLink] = useState<Link>("idle");
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [account, setAccount] = useState<Address | undefined>(props.account);
   useEffect(() => setAccount(props.account), [props.account]);
 
@@ -154,11 +160,38 @@ export function X402Widget(props: X402WidgetProps) {
         },
       );
       setTxHash(hash);
+      setStage("confirming");
+      // waitForTransactionReceipt resolves on a revert too — check the status.
+      const receipt = await pub.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("Registration reverted");
       setStage("success");
       props.onSuccess?.(label, parent.node, hash);
+      void handleSetAddress(account);
     } catch (e: any) {
       setError(e?.shortMessage ?? e?.message ?? "Transaction failed");
       setStage("error");
+    }
+  }
+
+  // Minting writes no address record, so a fresh name resolves to 0x0.
+  // Point it (ETH, default EVM, Base) at the minter in one resolver multicall.
+  async function handleSetAddress(user: Address | undefined = account) {
+    if (!user) return;
+    setLinkError(null);
+    setLink("signing");
+    try {
+      const wallet = props.walletClient ?? makeInjectedWalletClient(props.chain);
+      if (!wallet) throw new Error("No wallet client available");
+      const node = subnameNode(parent.node, label);
+      const resolver = await getResolver(pub, node);
+      const hash = await setAddress(wallet, { resolver, nodes: [node], address: user, account: user });
+      setLink("confirming");
+      const receipt = await pub.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("Set address reverted");
+      setLink("linked");
+    } catch (e: any) {
+      setLinkError(e?.shortMessage ?? e?.message ?? "Set address failed");
+      setLink("failed");
     }
   }
 
@@ -177,7 +210,7 @@ export function X402Widget(props: X402WidgetProps) {
               placeholder="yourname"
               value={label}
               onChange={(e) => setLabel(e.target.value.toLowerCase().trim())}
-              disabled={stage === "submitting"}
+              disabled={stage === "submitting" || stage === "confirming"}
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
@@ -189,7 +222,7 @@ export function X402Widget(props: X402WidgetProps) {
                 const next = props.parents.find((p) => p.label === e.target.value);
                 if (next) setParent(next);
               }}
-              disabled={stage === "submitting"}
+              disabled={stage === "submitting" || stage === "confirming"}
             >
               {props.parents.map((p) => (
                 <option key={p.label} value={p.label}>.{p.label}</option>
@@ -243,9 +276,13 @@ export function X402Widget(props: X402WidgetProps) {
             <button
               className="x402id-btn"
               onClick={handleRegister}
-              disabled={!canProceed || stage === "submitting"}
+              disabled={!canProceed || stage === "submitting" || stage === "confirming"}
             >
-              {stage === "submitting" ? "Confirm in wallet…" : `Register ${fullName || "subname"}`}
+              {stage === "submitting"
+                ? "Confirm in wallet…"
+                : stage === "confirming"
+                ? "Confirming on-chain…"
+                : `Register ${fullName || "subname"}`}
             </button>
           )}
         </>
@@ -254,6 +291,29 @@ export function X402Widget(props: X402WidgetProps) {
       {stage === "success" && txHash && (
         <div>
           <div className="x402id-msg x402id-ok">{fullName} registered.</div>
+          {link === "linked" ? (
+            <div className="x402id-msg x402id-ok">
+              {fullName} now resolves to {account?.slice(0, 6)}…{account?.slice(-4)} on Ethereum and Base.
+            </div>
+          ) : (
+            <>
+              <div className="x402id-msg">
+                Last step: point {fullName} at your wallet so it resolves on Ethereum and Base.
+              </div>
+              <button
+                className="x402id-btn"
+                onClick={() => handleSetAddress()}
+                disabled={link === "signing" || link === "confirming"}
+              >
+                {link === "signing"
+                  ? "Confirm in wallet…"
+                  : link === "confirming"
+                  ? "Confirming on-chain…"
+                  : "Set my address"}
+              </button>
+              {linkError && <div className="x402id-msg x402id-err">{linkError}</div>}
+            </>
+          )}
           {props.blockExplorerUrl && (
             <div className="x402id-msg">
               <a className="x402id-link" target="_blank" rel="noreferrer"

@@ -8,9 +8,12 @@ import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 export function useRegister() {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
-  const { writeContract, reset, data: hash, isPending, error } = useWriteContract();
+  const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash, chainId: mainnet.id });
+  const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({ hash, chainId: mainnet.id });
+  // A mined receipt is not a successful one — a reverted mint must not show the success panel.
+  const isSuccess = receipt?.status === "success";
+  const error = writeError ?? (receipt?.status === "reverted" ? new Error("Transaction reverted") : null);
 
   const register = async (parentNode: `0x${string}`, label: string) => {
     // The registrar is mainnet-only; a wallet left on Base (e.g. after a swap) must switch first.

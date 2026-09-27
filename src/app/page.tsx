@@ -6,6 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { MintDrawer } from "@/components/MintDrawer";
 import { LiveMetrics } from "@/components/LiveMetrics";
 import { TokenSwap } from "@/components/TokenSwap";
+import { SetAddressPanel } from "@/components/SetAddressPanel";
 import { TOKEN } from "@/lib/token";
 import { useParentExpiries, fmtMonthYear } from "@/hooks/useParentExpiries";
 
@@ -569,11 +570,32 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Resolve */}
+      <section id="resolve" className="section-divider">
+        <div className="wrap">
+          <div className="sec-head">
+            <span className="index">07 / Resolve</span>
+            <div className="h">
+              <h2>Point your name at your wallet.</h2>
+              <p>
+                Minting makes you the owner, but writes no address record, so a new name resolves to
+                nothing until you set one. One signature points it at the wallet that owns it, on Ethereum,
+                Base and any other EVM chain. List your x402 service from that same wallet and the name
+                and the payout address match.
+              </p>
+            </div>
+          </div>
+          <div style={{ maxWidth: 560 }}>
+            <SetAddressPanel />
+          </div>
+        </div>
+      </section>
+
       {/* Developers */}
       <section id="developers" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">07 / Integrate</span>
+            <span className="index">08 / Integrate</span>
             <div className="h">
               <h2>One contract, two calls, no SDK required.</h2>
               <p>
@@ -674,6 +696,7 @@ export default function Home() {
                 <li><a href="#architecture">Architecture</a></li>
                 <li><a href="#metrics">Live metrics</a></li>
                 <li><a href="#token">$X402ID token</a></li>
+                <li><a href="#resolve">Set my address</a></li>
                 <li><a href="/integrate/">Integrate (platforms)</a></li>
               </ul>
             </div>

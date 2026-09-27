@@ -13,6 +13,7 @@ import { registrarAbi, forwarderAbi } from "./abis.js";
 import { validateLabel } from "./validation.js";
 
 export { registrarAbi, forwarderAbi, validateLabel };
+export * from "./resolver.js";
 
 export interface X402Config {
   registrar: Address;
