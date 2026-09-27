@@ -1,6 +1,6 @@
 {
   "name": "@x402identity/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for x402 Identity Hub — ENS subname identities for AI agents (402bot.eth / 402api.eth / 402mcp.eth).",
   "license": "MIT",
   "type": "module",

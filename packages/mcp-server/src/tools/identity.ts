@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { getAddress, namehash } from "viem";
-import { normalize } from "viem/ens";
+import { getAddress, namehash, zeroAddress } from "viem";
+import { normalize, toCoinType } from "viem/ens";
+import { base } from "viem/chains";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   REGISTRAR,
@@ -22,47 +23,85 @@ export function registerIdentityTools(server: McpServer, ctx: Ctx) {
     "resolve_identity",
     {
       description:
-        "Resolve an ENS name (e.g. myagent.402bot.eth) to its Ethereum address, current " +
-        "owner, and common text records (description, url, avatar, socials).",
+        "Resolve an ENS name (e.g. myagent.402bot.eth) to its Ethereum and Base addresses, " +
+        "current owner, and common text records (description, url, avatar, socials). " +
+        "Fields that could not be read are listed under `errors` instead of reading as empty.",
       inputSchema: {
         name: z.string().describe("Full ENS name, e.g. 'myagent.402bot.eth'"),
       },
     },
     async ({ name }) => {
+      let normalized: string;
       try {
-        const normalized = normalize(name);
-        const [address, rawOwner, ...texts] = await Promise.all([
-          ctx.publicClient.getEnsAddress({ name: normalized }).catch(() => null),
-          ctx.publicClient
-            .readContract({
-              address: NAME_WRAPPER,
-              abi: nameWrapperAbi,
-              functionName: "ownerOf",
-              args: [BigInt(namehash(normalized))],
-            })
-            .catch(() => null),
-          ...TEXT_KEYS.map((key) =>
-            ctx.publicClient.getEnsText({ name: normalized, key }).catch(() => null),
-          ),
-        ]);
-
-        // NameWrapper returns the zero address for nonexistent names.
-        const owner =
-          rawOwner && rawOwner !== "0x0000000000000000000000000000000000000000"
-            ? rawOwner
-            : null;
-
-        const records = Object.fromEntries(
-          TEXT_KEYS.map((key, i) => [key, texts[i]]).filter(([, v]) => v),
-        );
-
-        if (!address && !owner) {
-          return jsonResult({ name: normalized, registered: false });
-        }
-        return jsonResult({ name: normalized, registered: true, address, owner, records });
+        normalized = normalize(name);
       } catch (err) {
-        return errorResult(`Resolution failed: ${(err as Error).message}`);
+        return errorResult(`Invalid ENS name: ${(err as Error).message}`);
       }
+
+      // viem's ENS actions already return null for a genuinely missing resolver
+      // or record, and throw only on a real failure (throttled RPC, network).
+      // Catching to null here would publish an outage as "not registered", so
+      // each read keeps its error and the result says which fields are unknown.
+      const reads = {
+        address: () => ctx.publicClient.getEnsAddress({ name: normalized }),
+        baseAddress: () =>
+          ctx.publicClient.getEnsAddress({ name: normalized, coinType: toCoinType(base.id) }),
+        owner: () =>
+          ctx.publicClient.readContract({
+            address: NAME_WRAPPER,
+            abi: nameWrapperAbi,
+            functionName: "ownerOf",
+            args: [BigInt(namehash(normalized))],
+          }),
+        ...Object.fromEntries(
+          TEXT_KEYS.map((key) => [
+            `text:${key}`,
+            () => ctx.publicClient.getEnsText({ name: normalized, key }),
+          ]),
+        ),
+      } as Record<string, () => Promise<string | null>>;
+
+      const keys = Object.keys(reads);
+      const settled = await Promise.allSettled(keys.map((k) => reads[k]()));
+      const value: Record<string, string | null> = {};
+      const errors: Record<string, string> = {};
+      settled.forEach((r, i) => {
+        if (r.status === "fulfilled") value[keys[i]] = r.value;
+        else errors[keys[i]] = (r.reason as { shortMessage?: string; message: string })
+          .shortMessage ?? (r.reason as Error).message;
+      });
+
+      // NameWrapper returns the zero address for nonexistent names.
+      const owner = value.owner && value.owner !== zeroAddress ? value.owner : null;
+      const records = Object.fromEntries(
+        TEXT_KEYS.map((key) => [key, value[`text:${key}`]]).filter(([, v]) => v),
+      );
+
+      if (errors.address && errors.owner) {
+        return errorResult(
+          `Resolution failed for ${normalized}: ${errors.owner.replace(/\.+$/, "")}. The RPC may be ` +
+            "throttled — retry, or set X402_RPC_URL to your own endpoint.",
+        );
+      }
+
+      const registered = Boolean(owner || value.address);
+      // A failed read leaves a field unknown, so "not registered" is only
+      // claimed when both the owner and address reads actually answered.
+      if (!registered && !errors.address && !errors.owner) {
+        return jsonResult({ name: normalized, registered: false });
+      }
+      return jsonResult({
+        name: normalized,
+        registered: registered ? true : "unknown",
+        address: value.address ?? null,
+        addresses: {
+          ethereum: value.address ?? null,
+          base: value.baseAddress ? getAddress(value.baseAddress) : null,
+        },
+        owner,
+        records,
+        ...(Object.keys(errors).length ? { errors } : {}),
+      });
     },
   );
 

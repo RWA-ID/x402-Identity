@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { MintDrawer } from "@/components/MintDrawer";
 import { LiveMetrics } from "@/components/LiveMetrics";
@@ -80,13 +80,14 @@ function CodeCopyBtn({ target }: { target: string }) {
 
 function NavConnect({ onMint }: { onMint: () => void }) {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
   const { open } = useAppKit();
 
   return (
     <div className="nav-cta">
       {isConnected && address ? (
-        <button className="btn btn-ghost" onClick={() => disconnect()}>
+        // AppKit's account view owns disconnect. wagmi's disconnect() alone left
+        // AppKit's saved session behind, so it reconnected on the next load.
+        <button className="btn btn-ghost" onClick={() => open({ view: "Account" })}>
           <span className="mono" style={{ fontSize: 12 }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
         </button>
       ) : (
@@ -133,7 +134,7 @@ export default function Home() {
       <header className="nav">
         <div className="wrap nav-inner">
           <a className="brand" href="#top" aria-label="x402 Identity Hub">
-            <span className="brand-mark">x</span>
+            <img className="brand-mark" src="/favicon.svg" width={22} height={22} alt="" />
             <span>x402</span>
             <span className="brand-sub">/ identity hub</span>
           </a>
@@ -454,10 +455,10 @@ export default function Home() {
             <div className="token-facts">
               <img
                 className="token-hero"
-                src="/token/x402id-coin.jpg"
-                alt="$X402ID coin — the token for the x402 Identity Hub, launched on Base via Bankr"
-                width={1000}
-                height={1000}
+                src="/favicon.svg"
+                alt="$X402ID token icon"
+                width={96}
+                height={96}
                 loading="lazy"
               />
               <div className="fact-list">
@@ -473,7 +474,7 @@ export default function Home() {
                 <a className="btn btn-ghost" href={`https://bankr.bot/terminal/trade?out=${TOKEN.address}&chain=base`} target="_blank" rel="noopener">
                   Trade on Bankr <span className="arrow">↗</span>
                 </a>
-                <a className="btn btn-ghost" href={`https://dexscreener.com/base/${TOKEN.address}`} target="_blank" rel="noopener">
+                <a className="btn btn-ghost" href={`https://app.uniswap.org/explore/tokens/base/${TOKEN.address}`} target="_blank" rel="noopener">
                   Chart <span className="arrow">↗</span>
                 </a>
                 <a className="btn btn-ghost" href={`https://app.safe.global/home?safe=base:${TOKEN.treasury}`} target="_blank" rel="noopener">
@@ -658,7 +659,7 @@ export default function Home() {
           <div className="foot-grid">
             <div className="foot-col">
               <a className="brand" href="#top">
-                <span className="brand-mark">x</span>
+                <img className="brand-mark" src="/favicon.svg" width={22} height={22} alt="" />
                 <span>x402</span>
                 <span className="brand-sub">/ identity hub</span>
               </a>
