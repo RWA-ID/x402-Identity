@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { MintRow } from "@/types";
-import { makeSubnameNode } from "@/lib/ens";
 import { useSetAddress } from "@/hooks/useSetAddress";
 
 type SuccessModalProps = {
@@ -14,14 +13,13 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
   const names = minted.map((r) => `${r.label}.${r.parent.label}`);
   const [copied, setCopied] = useState<string | null>(null);
   const link = useSetAddress();
-  const nodes = minted.map((r) => makeSubnameNode(r.parent.node, r.label));
 
   // A fresh name resolves to 0x0 — prompt the address signature once, right after the mint.
   const prompted = useRef(false);
   useEffect(() => {
-    if (prompted.current || !link.address || nodes.length === 0) return;
+    if (prompted.current || !link.address || names.length === 0) return;
     prompted.current = true;
-    void link.setAddress(nodes);
+    void link.setAddress(names);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [link.address]);
 
@@ -95,7 +93,7 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
             <button
               className="btn btn-primary"
               style={{ width: "100%", marginTop: 12, height: 46 }}
-              onClick={() => link.setAddress(nodes)}
+              onClick={() => link.setAddress(names)}
               disabled={link.state === "signing" || link.state === "confirming"}
             >
               {link.state === "signing"

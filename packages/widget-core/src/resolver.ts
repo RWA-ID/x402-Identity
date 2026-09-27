@@ -5,8 +5,11 @@ import {
   type WalletClient,
   encodeFunctionData,
   getAddress,
+  namehash,
+  toHex,
   zeroAddress,
 } from "viem";
+import { packetToBytes } from "viem/ens";
 
 /**
  * Minting a subname sets its owner and resolver but writes NO address record,
@@ -14,24 +17,35 @@ import {
  * to 0x0. These helpers write the records so the name resolves to its holder.
  */
 
-export const ENS_REGISTRY: Address = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
+/**
+ * ENS's canonical resolution entry point — a DAO-owned proxy that will be
+ * upgraded for ENSv2, so finding resolvers through it survives the migration.
+ */
+export const UNIVERSAL_RESOLVER: Address = "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe";
 
 /** ENSIP-11 coin type for Ethereum mainnet. */
 export const ETH_COIN_TYPE = 60n;
-/** ENSIP-19 default EVM coin type: resolves on any EVM chain with no chain-specific record. */
-export const DEFAULT_EVM_COIN_TYPE = 0x80000000n;
-/** ENSIP-11 coin type for Base (0x80000000 | 8453). Not written: the default EVM record covers it. */
+/**
+ * ENSIP-11 coin type for Base (0x80000000 | 8453). Written explicitly: a Base
+ * lookup (`coinType: toCoinType(base.id)`, as the ENS docs direct) never falls
+ * back to the ETH record, and the Universal Resolver ignores the ENSIP-19
+ * default-EVM record on the PublicResolver these names use.
+ */
 export const BASE_COIN_TYPE = 0x80000000n | 8453n;
 /** Tip floor for the address write — enough to be included, far below a wallet's default. */
 const MIN_PRIORITY_FEE = 10_000_000n; // 0.01 gwei
 
-export const ensRegistryAbi = [
+export const universalResolverAbi = [
   {
     type: "function",
-    name: "resolver",
+    name: "findResolver",
     stateMutability: "view",
-    inputs: [{ name: "node", type: "bytes32" }],
-    outputs: [{ type: "address" }],
+    inputs: [{ name: "name", type: "bytes" }],
+    outputs: [
+      { name: "resolver", type: "address" },
+      { name: "node", type: "bytes32" },
+      { name: "offset", type: "uint256" },
+    ],
   },
 ] as const;
 
@@ -80,8 +94,8 @@ export interface AddressStatus {
   resolver: Address;
   /** Address on the ETH record (coin type 60), or null if unset. */
   eth: Address | null;
-  /** Address on the ENSIP-19 default EVM record (Base and every other EVM chain), or null if unset. */
-  defaultEvm: Address | null;
+  /** Address on the Base record, or null if unset. */
+  base: Address | null;
   /** True when both records point at `expected`. */
   linked: boolean;
 }
@@ -92,26 +106,34 @@ function bytesToAddress(b: Hex): Address | null {
   return a === zeroAddress ? null : a;
 }
 
-export async function getResolver(publicClient: PublicClient, node: Hex): Promise<Address> {
-  return publicClient.readContract({
-    address: ENS_REGISTRY,
-    abi: ensRegistryAbi,
-    functionName: "resolver",
-    args: [node],
-  }) as Promise<Address>;
+/**
+ * The resolver configured for `name` itself, looked up at call time through the
+ * Universal Resolver — never hardcoded or cached (ENSv2 resolvers are per
+ * account and change with ownership). Throws if the name has no resolver of its
+ * own: an inherited parent resolver would reject the holder's writes.
+ */
+export async function getResolver(publicClient: PublicClient, name: string): Promise<Address> {
+  const [resolver, , offset] = (await publicClient.readContract({
+    address: UNIVERSAL_RESOLVER,
+    abi: universalResolverAbi,
+    functionName: "findResolver",
+    args: [toHex(packetToBytes(name))],
+  })) as readonly [Address, Hex, bigint];
+  if (resolver === zeroAddress || offset !== 0n) throw new Error(`${name} has no resolver of its own`);
+  return resolver;
 }
 
 /**
- * Read the name's ETH and default-EVM records and compare them to `expected`.
+ * Read the name's ETH and Base records and compare them to `expected`.
  * Throws if the name has no resolver — callers must not read a failed call as "unlinked".
  */
 export async function getAddressStatus(
   publicClient: PublicClient,
-  node: Hex,
+  name: string,
   expected: Address,
 ): Promise<AddressStatus> {
-  const resolver = await getResolver(publicClient, node);
-  if (resolver === zeroAddress) throw new Error("Name has no resolver");
+  const resolver = await getResolver(publicClient, name);
+  const node = namehash(name);
   const read = (coinType: bigint) =>
     publicClient.readContract({
       address: resolver,
@@ -119,23 +141,17 @@ export async function getAddressStatus(
       functionName: "addr",
       args: [node, coinType],
     }) as Promise<Hex>;
-  const [eth, defaultEvm] = (await Promise.all([read(ETH_COIN_TYPE), read(DEFAULT_EVM_COIN_TYPE)])).map(
-    bytesToAddress,
-  );
+  const [eth, base] = (await Promise.all([read(ETH_COIN_TYPE), read(BASE_COIN_TYPE)])).map(bytesToAddress);
   const want = getAddress(expected);
-  return { resolver, eth, defaultEvm, linked: eth === want && defaultEvm === want };
+  return { resolver, eth, base, linked: eth === want && base === want };
 }
 
-/**
- * Calldata for the resolver calls that point one name at `addr`: the ETH record,
- * plus the ENSIP-19 default EVM record so strict clients resolve it on Base too
- * (a Base lookup never falls back to the ETH record).
- */
+/** Calldata for the resolver calls that point one name's ETH and Base records at `addr`. */
 export function buildSetAddressCalls(node: Hex, addr: Address): Hex[] {
   const a = getAddress(addr);
   return [
     encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, a] }),
-    encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, DEFAULT_EVM_COIN_TYPE, a] }),
+    encodeFunctionData({ abi: publicResolverAbi, functionName: "setAddr", args: [node, BASE_COIN_TYPE, a] }),
   ];
 }
 

@@ -175,7 +175,7 @@ export function X402Widget(props: X402WidgetProps) {
   }
 
   // Minting writes no address record, so a fresh name resolves to 0x0.
-  // Point its ETH and default-EVM (Base, any EVM chain) records at the minter in one multicall.
+  // Point its ETH and Base records at the minter in one multicall.
   async function handleSetAddress(user: Address | undefined = account) {
     if (!user) return;
     setLinkError(null);
@@ -184,7 +184,7 @@ export function X402Widget(props: X402WidgetProps) {
       const wallet = props.walletClient ?? makeInjectedWalletClient(props.chain);
       if (!wallet) throw new Error("No wallet client available");
       const node = subnameNode(parent.node, label);
-      const [resolver, fees] = await Promise.all([getResolver(pub, node), getLowFees(pub)]);
+      const [resolver, fees] = await Promise.all([getResolver(pub, `${label}.${parent.label}`), getLowFees(pub)]);
       const hash = await setAddress(wallet, { resolver, nodes: [node], address: user, account: user, fees });
       setLink("confirming");
       const receipt = await pub.waitForTransactionReceipt({ hash });

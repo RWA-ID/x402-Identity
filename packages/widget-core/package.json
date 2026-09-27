@@ -1,6 +1,6 @@
 {
   "name": "@x402identity/widget-core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Framework-agnostic core for the x402 Identity Hub registration widget.",
   "license": "MIT",
   "type": "module",
@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "viem": "^2.0.0"
+    "viem": "^2.35.0"
   },
   "files": ["dist", "src"],
   "sideEffects": false

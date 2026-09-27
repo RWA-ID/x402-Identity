@@ -52,6 +52,7 @@ export function SetAddressPanel() {
   const [refresh, setRefresh] = useState(0);
   const parsed = parseName(input);
   const node = parsed?.node;
+  const name = parsed?.name;
 
   useEffect(() => {
     link.reset();
@@ -63,7 +64,7 @@ export function SetAddressPanel() {
   }, [link.state]);
 
   useEffect(() => {
-    if (!node || !client || !address) {
+    if (!node || !name || !client || !address) {
       setLookup({ kind: "idle" });
       return;
     }
@@ -82,7 +83,7 @@ export function SetAddressPanel() {
           setLookup({ kind: "unminted" });
           return;
         }
-        const status = await getAddressStatus(client, node, address);
+        const status = await getAddressStatus(client, name, address);
         if (!cancel) setLookup({ kind: "ok", owner: getAddress(owner), status });
       } catch (e) {
         if (!cancel) setLookup({ kind: "error", message: errorMessage(e) ?? "Lookup failed" });
@@ -92,7 +93,7 @@ export function SetAddressPanel() {
       cancel = true;
       clearTimeout(t);
     };
-  }, [node, client, address, refresh]);
+  }, [node, name, client, address, refresh]);
 
   const isOwner = lookup.kind === "ok" && address != null && lookup.owner === getAddress(address);
   const busy = link.state === "signing" || link.state === "confirming";
@@ -149,8 +150,8 @@ export function SetAddressPanel() {
             <div className="v">{short(lookup.status.eth)}</div>
           </div>
           <div className="fuse-row">
-            <div className="k">BASE · ANY EVM</div>
-            <div className="v">{short(lookup.status.defaultEvm)}</div>
+            <div className="k">BASE</div>
+            <div className="v">{short(lookup.status.base)}</div>
           </div>
         </div>
       )}
@@ -164,7 +165,7 @@ export function SetAddressPanel() {
           className="btn btn-ghost"
           style={{ width: "100%", marginTop: 14 }}
           disabled={!parsed || !isOwner || busy || (lookup.kind === "ok" && lookup.status.linked)}
-          onClick={() => parsed && link.setAddress([parsed.node])}
+          onClick={() => parsed && link.setAddress([parsed.name])}
         >
           {link.state === "signing"
             ? "Confirm in wallet…"
