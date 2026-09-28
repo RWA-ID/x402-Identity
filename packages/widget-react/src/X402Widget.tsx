@@ -48,6 +48,13 @@ export interface X402WidgetProps {
   walletClient?: WalletClient;
   /** Connected account. If omitted, widget exposes its own connect UI. */
   account?: Address;
+  /**
+   * Host connect handler, e.g. `() => open()` from AppKit or RainbowKit's
+   * `openConnectModal`. When set, the widget's Connect button calls it instead of
+   * `window.ethereum`, stays enabled without an injected wallet, and never falls
+   * back to an injected wallet client — the host passes `account` + `walletClient`.
+   */
+  onConnect?: () => void;
 
   theme?: "light" | "dark";
   blockExplorerUrl?: string;
@@ -132,6 +139,7 @@ export function X402Widget(props: X402WidgetProps) {
 
   async function handleConnect() {
     setError(null);
+    if (props.onConnect) { props.onConnect(); return; }
     try {
       const a = await connectInjected();
       if (a) setAccount(a);
@@ -147,7 +155,7 @@ export function X402Widget(props: X402WidgetProps) {
     setStage("submitting");
     try {
       const wallet =
-        props.walletClient ?? makeInjectedWalletClient(props.chain);
+        props.walletClient ?? (props.onConnect ? null : makeInjectedWalletClient(props.chain));
       if (!wallet) throw new Error("No wallet client available");
       const hash = await registerVia(
         { registrar: props.registrar, forwarder: props.forwarder, publicClient: pub },
@@ -181,7 +189,7 @@ export function X402Widget(props: X402WidgetProps) {
     setLinkError(null);
     setLink("signing");
     try {
-      const wallet = props.walletClient ?? makeInjectedWalletClient(props.chain);
+      const wallet = props.walletClient ?? (props.onConnect ? null : makeInjectedWalletClient(props.chain));
       if (!wallet) throw new Error("No wallet client available");
       const node = subnameNode(parent.node, label);
       const [resolver, fees] = await Promise.all([getResolver(pub, `${label}.${parent.label}`), getLowFees(pub)]);
@@ -274,9 +282,9 @@ export function X402Widget(props: X402WidgetProps) {
             <button
               className="x402id-btn"
               onClick={handleConnect}
-              disabled={!hasInjectedWallet()}
+              disabled={!props.onConnect && !hasInjectedWallet()}
             >
-              {hasInjectedWallet() ? "Connect wallet" : "No wallet detected"}
+              {props.onConnect || hasInjectedWallet() ? "Connect wallet" : "No wallet detected"}
             </button>
           ) : (
             <button

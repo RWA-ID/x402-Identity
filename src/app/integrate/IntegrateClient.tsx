@@ -32,6 +32,12 @@ import { namehash, parseEther } from "viem";
   chain={mainnet}
   theme="light"
   onSuccess={(label, parentNode, txHash) => console.log("minted", label, txHash)}
+  // Already have a wallet modal (AppKit, RainbowKit)? Hand the widget your
+  // wagmi clients and connect handler so it uses the same wallet:
+  // account={address}
+  // publicClient={publicClient}
+  // walletClient={walletClient}
+  // onConnect={() => open()}
 />`;
 
 const SNIPPET_MCP = `{
@@ -153,8 +159,9 @@ export default function IntegratePage() {
         <div className="wrap">
           <h2>2. React / Next.js</h2>
           <p style={{ marginTop: 16, maxWidth: "60ch", color: "var(--muted)" }}>
-            For React apps, install the package and render the component. It uses your existing wagmi/viem
-            context if present, or falls back to <span className="mono">window.ethereum</span>.
+            For React apps, install the package and render the component. Pass your wagmi/viem clients and an{" "}
+            <span className="mono">onConnect</span> handler to use your own wallet modal; otherwise it falls back
+            to <span className="mono">window.ethereum</span>.
           </p>
           <div style={{ marginTop: 16, padding: "12px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--bg-sunk)" }}>
             <code className="mono" style={{ fontSize: 13 }}>npm install @x402identity/widget-react viem</code>
