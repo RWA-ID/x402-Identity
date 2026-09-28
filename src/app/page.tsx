@@ -129,7 +129,7 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <div className="site">
       {/* Header */}
       <header className="nav">
         <div className="wrap nav-inner">
@@ -710,6 +710,6 @@ export default function Home() {
         onClose={() => setDrawerOpen(false)}
         initialParent={initialParent}
       />
-    </>
+    </div>
   );
 }

@@ -169,10 +169,10 @@ Like the widget, anyone can run this server with a treasury configured and earn 
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeicr4daxddlolyh4izonxrv5lmr55hjxao7strvkzdiwiasvtlnf74`
+**IPFS CID:** `bafybeidkjpeovi5kmpoa3uxwwjolwgn6eskm233yiarmjjz3ourwjbgt2q`
 
 ```
-https://ipfs.io/ipfs/bafybeicr4daxddlolyh4izonxrv5lmr55hjxao7strvkzdiwiasvtlnf74/
+https://ipfs.io/ipfs/bafybeidkjpeovi5kmpoa3uxwwjolwgn6eskm233yiarmjjz3ourwjbgt2q/
 ```
 
 ---

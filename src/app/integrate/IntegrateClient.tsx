@@ -71,7 +71,7 @@ function Code({ id, code }: { id: string; code: string }) {
 
 export default function IntegratePage() {
   return (
-    <main>
+    <main className="site">
       <header className="nav">
         <div className="wrap nav-inner">
           <a className="brand" href="/" aria-label="x402 Identity Hub">
