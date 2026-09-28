@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMintFee } from "@/hooks/useMintFee";
 
 const FORWARDER = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
@@ -76,6 +77,7 @@ function Code({ id, code }: { id: string; code: string }) {
 }
 
 export default function IntegratePage() {
+  const { feeEth } = useMintFee();
   return (
     <main className="site">
       <header className="nav">
@@ -111,14 +113,14 @@ export default function IntegratePage() {
         <div className="wrap">
           <h2>How the fees work</h2>
           <p style={{ marginTop: 16, maxWidth: "60ch", color: "var(--muted)" }}>
-            Each registration pays a protocol fee (currently <span className="mono">0.005 ETH</span>) plus a
+            Each registration pays a protocol fee (currently <span className="mono">{feeEth} ETH</span>) plus a
             platform fee that you choose. The widget shows users the breakdown line-by-line before they sign —
             no hidden charges. Both legs settle in one transaction through the forwarder contract.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 24 }}>
             <div style={{ padding: 20, border: "1px solid var(--line)", borderRadius: 12 }}>
               <div className="eyebrow">Protocol fee</div>
-              <div style={{ fontSize: 22, marginTop: 8 }} className="mono">0.005 ETH</div>
+              <div style={{ fontSize: 22, marginTop: 8 }} className="mono">{feeEth} ETH</div>
               <div style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>set on-chain by the registrar</div>
             </div>
             <div style={{ padding: 20, border: "1px solid var(--line)", borderRadius: 12 }}>

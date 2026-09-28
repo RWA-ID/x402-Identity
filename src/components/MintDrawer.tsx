@@ -8,6 +8,8 @@ import { isValidLabel } from "@/lib/ens";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRegister } from "@/hooks/useRegister";
 import { useBatchRegister } from "@/hooks/useBatchRegister";
+import { useMintFee } from "@/hooks/useMintFee";
+import { useEthUsd } from "@/hooks/useEthUsd";
 import { useRecentMints } from "@/hooks/useRecentMints";
 import { SuccessModal } from "@/components/SuccessModal";
 import { SetAddressPanel } from "@/components/SetAddressPanel";
@@ -39,6 +41,8 @@ function relTime(ts: number) {
 export function MintDrawer({ open, onClose, initialParent }: Props) {
   const { open: openAppKit } = useAppKit();
   const { isConnected } = useAccount();
+  const mintFee = useMintFee();
+  const toUsd = useEthUsd();
 
   const [selectedParent, setSelectedParent] = useState<Parent>(PARENTS[0]);
   const [labelInput, setLabelInput] = useState("");
@@ -144,7 +148,8 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
   const isPending = single.isPending || batch.isPending;
   const isConfirming = single.isConfirming || batch.isConfirming;
   const mintCount = rows.length > 0 ? rows.length : isAvailable ? 1 : 0;
-  const totalEth = (mintCount * 0.005).toFixed(3);
+  const totalEth = mintFee.totalEth(mintCount);
+  const totalUsd = mintCount > 0 ? toUsd(mintFee.feeWei * BigInt(mintCount)) : null;
 
   let mintLabel: React.ReactNode = (
     <>
@@ -310,6 +315,12 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
               <span className="k">Total</span>
               <br />
               <span className="v" style={{ fontSize: 18 }}>{totalEth} ETH</span>
+              {totalUsd && (
+                <>
+                  <br />
+                  <span className="k" style={{ textTransform: "none", letterSpacing: 0 }}>{totalUsd} + gas</span>
+                </>
+              )}
             </div>
           </div>
 

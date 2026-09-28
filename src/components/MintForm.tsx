@@ -10,11 +10,13 @@ import { MintRow } from "@/components/MintRow";
 import { Button } from "@/components/ui/Button";
 import { useRegister } from "@/hooks/useRegister";
 import { useBatchRegister } from "@/hooks/useBatchRegister";
+import { useMintFee } from "@/hooks/useMintFee";
 import { SuccessModal } from "@/components/SuccessModal";
 import type { MintRow as MintRowType } from "@/types";
 
 export function MintForm() {
   const { isConnected } = useAccount();
+  const mintFee = useMintFee();
   const [selectedParent, setSelectedParent] = useState<Parent | null>(PARENTS[0]);
   const [labelInput, setLabelInput] = useState("");
   const [rows, setRows] = useState<MintRowType[]>([]);
@@ -68,7 +70,7 @@ export function MintForm() {
   };
 
   const mintCount = rows.length > 0 ? rows.length : labelInput.length >= 3 && selectedParent ? 1 : 0;
-  const totalFee = (mintCount || 1) * 0.005;
+  const totalFee = mintFee.totalEth(mintCount || 1);
   const canMint = isConnected && mintCount > 0;
 
   return (
@@ -164,7 +166,7 @@ export function MintForm() {
                 ? "Confirming..."
                 : isPending
                 ? "Confirm in Wallet..."
-                : `Mint ${mintCount} ${mintCount === 1 ? "Name" : "Names"} · ${totalFee.toFixed(3)} ETH`}
+                : `Mint ${mintCount} ${mintCount === 1 ? "Name" : "Names"} · ${totalFee} ETH`}
             </Button>
           )}
 

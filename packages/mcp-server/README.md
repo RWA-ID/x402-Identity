@@ -40,8 +40,8 @@ No environment variables needed. `register_subname` returns:
 {
   "mode": "prepare-only",
   "name": "myagent.402bot.eth",
-  "totalCostEth": "0.005",
-  "transaction": { "to": "0x…", "data": "0x…", "value": "5000000000000000" }
+  "totalCostEth": "0.0015",
+  "transaction": { "to": "0x…", "data": "0x…", "value": "1500000000000000" }
 }
 ```
 
@@ -77,4 +77,4 @@ Just like the [embeddable widget](https://x402id.eth.link/integrate), anyone can
 | `X402SubnameRegistrar` | `0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633` |
 | `X402RegistrarForwarder` | `0x05af104ce913e7ef39799bfada871817d3761778` |
 
-Mint fee: 0.005 ETH per name. Names are permanent — no renewals, no expiry.
+Mint fee: 0.0015 ETH per name (read live from the registrar). Names are permanent — no renewals, no expiry.

@@ -8,6 +8,7 @@ import { LiveMetrics } from "@/components/LiveMetrics";
 import { TokenSwap } from "@/components/TokenSwap";
 import { TOKEN } from "@/lib/token";
 import { useParentExpiries, fmtMonthYear } from "@/hooks/useParentExpiries";
+import { useMintFee } from "@/hooks/useMintFee";
 
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
 
@@ -103,6 +104,7 @@ function NavConnect({ onMint }: { onMint: () => void }) {
 }
 
 export default function Home() {
+  const { feeEth } = useMintFee();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [initialParent, setInitialParent] = useState<string | null>(null);
   const [tlFilled, setTlFilled] = useState(false);
@@ -176,7 +178,7 @@ export default function Home() {
             </a>
           </div>
           <div className="hero-meta">
-            <span><b style={{ color: "var(--ink)", fontWeight: 500 }}>0.005 ETH</b> &nbsp;per name</span>
+            <span><b style={{ color: "var(--ink)", fontWeight: 500 }}>{feeEth} ETH</b> &nbsp;per name</span>
             <span className="sep" />
             <span>No renewals for holders</span>
             <span className="sep" />
@@ -400,7 +402,7 @@ export default function Home() {
             </svg>
 
             <div className="arch-legend">
-              <div className="row"><span className="k">Registrar</span><span>Receives the 0.005 ETH fee, validates the label, and calls the NameWrapper.</span></div>
+              <div className="row"><span className="k">Registrar</span><span>Receives the {feeEth} ETH fee, validates the label, and calls the NameWrapper.</span></div>
               <div className="row"><span className="k">NameWrapper</span><span>Issues the wrapped subname with permanence fuses burned at mint time.</span></div>
               <div className="row"><span className="k">Resolver</span><span>Exposes address, text, and contenthash records to any consumer of ENS.</span></div>
               <div className="row"><span className="k">CCIP-Read</span><span>Resolves the name from any chain or off-chain backend implementing EIP-3668.</span></div>
@@ -466,7 +468,7 @@ export default function Home() {
                 <div className="fact-row"><span className="k">Liquidity</span><span className="v">85% in a Uniswap v4 pool paired with WETH</span></div>
                 <div className="fact-row"><span className="k">Treasury</span><span className="v">15% vesting to the x402 Safe (2-of-3) over 1 year, 30-day cliff — funds user rewards</span></div>
                 <div className="fact-row"><span className="k">Trading fees</span><span className="v">0.665% of volume to the Safe in WETH — parent-name renewals first, then development and buybacks</span></div>
-                <div className="fact-row"><span className="k">Mint cashback</span><span className="v">{TOKEN.cashbackPct}% of the 0.005 ETH fee back in $X402ID for every name registered since {TOKEN.launchDate}. Claimable on Base in monthly rounds, first round {TOKEN.cliffDate}</span></div>
+                <div className="fact-row"><span className="k">Mint cashback</span><span className="v">{TOKEN.cashbackPct}% of the mint fee paid back in $X402ID for every name registered since {TOKEN.launchDate}. Claimable on Base in monthly rounds, first round {TOKEN.cliffDate}</span></div>
                 <div className="fact-row"><span className="k">Integrators</span><span className="v">Mints through partner platforms (the forwarder) count toward the buyer&apos;s cashback</span></div>
               </div>
 
@@ -622,17 +624,19 @@ export default function Home() {
               </div>
               <div className="code-body">
                 <pre id="code-wagmi">
-                  <span className="k">import</span> {"{ useWriteContract }"} <span className="k">from</span> <span className="s">&apos;wagmi&apos;</span>
-{"\n"}<span className="k">import</span> {"{ namehash, parseEther }"} <span className="k">from</span> <span className="s">&apos;viem&apos;</span>
+                  <span className="k">import</span> {"{ useReadContract, useWriteContract }"} <span className="k">from</span> <span className="s">&apos;wagmi&apos;</span>
+{"\n"}<span className="k">import</span> {"{ namehash }"} <span className="k">from</span> <span className="s">&apos;viem&apos;</span>
 {"\n"}
 {"\n"}<span className="k">const</span> {"{ writeContract }"} = useWriteContract()
+{"\n"}<span className="c">{"// The fee is set on-chain; read it rather than hardcoding it"}</span>
+{"\n"}<span className="k">const</span> {"{ data: fee }"} = useReadContract({"{"} address: <span className="s">&apos;0xeb9e…9633&apos;</span>, abi: registrarAbi, functionName: <span className="s">&apos;mintFee&apos;</span> {"}"})
 {"\n"}
 {"\n"}writeContract({"{"}
 {"\n"}  address: <span className="s">&apos;0xeb9e…9633&apos;</span>,
 {"\n"}  abi:     registrarAbi,
 {"\n"}  functionName: <span className="s">&apos;register&apos;</span>,
-{"\n"}  args: [namehash(<span className="s">&apos;402bot.eth&apos;</span>), <span className="s">&apos;alice&apos;</span>, owner],
-{"\n"}  value: parseEther(<span className="s">&apos;0.005&apos;</span>),
+{"\n"}  args: [namehash(<span className="s">&apos;402bot.eth&apos;</span>), <span className="s">&apos;alice&apos;</span>],
+{"\n"}  value: fee,
 {"\n"}{"}"})
                 </pre>
               </div>

@@ -2,13 +2,15 @@
 
 import { useAccount, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { parseEther } from "viem";
+import { useFreshMintFee } from "@/hooks/useMintFee";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 
 export function useRegister() {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
+
+  const readMintFee = useFreshMintFee();
 
   const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({ hash, chainId: mainnet.id });
   // A mined receipt is not a successful one — a reverted mint must not show the success panel.
@@ -24,13 +26,19 @@ export function useRegister() {
         return;
       }
     }
+    let fee: bigint;
+    try {
+      fee = await readMintFee();
+    } catch {
+      return;
+    }
     writeContract({
       chainId: mainnet.id,
       address: ADDRESSES.mainnet.registrar,
       abi: REGISTRAR_ABI,
       functionName: "register",
       args: [parentNode, label],
-      value: parseEther("0.005"),
+      value: fee,
     });
   };
 

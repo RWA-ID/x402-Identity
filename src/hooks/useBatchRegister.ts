@@ -2,13 +2,14 @@
 
 import { useAccount, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { parseEther } from "viem";
+import { useFreshMintFee } from "@/hooks/useMintFee";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 
 export function useBatchRegister() {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
+  const readMintFee = useFreshMintFee();
   const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({ hash, chainId: mainnet.id });
   // A mined receipt is not a successful one — a reverted mint must not show the success panel.
   const isSuccess = receipt?.status === "success";
@@ -25,7 +26,13 @@ export function useBatchRegister() {
     }
     const parentNodes = rows.map((r) => r.parentNode);
     const labels = rows.map((r) => r.label);
-    const totalFee = parseEther("0.005") * BigInt(rows.length);
+    let fee: bigint;
+    try {
+      fee = await readMintFee();
+    } catch {
+      return;
+    }
+    const totalFee = fee * BigInt(rows.length);
     writeContract({
       chainId: mainnet.id,
       address: ADDRESSES.mainnet.registrar,

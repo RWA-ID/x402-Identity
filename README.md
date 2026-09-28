@@ -2,7 +2,7 @@
 
 **ENS subname registration for AI agents — fully onchain on Ethereum.**
 
-Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.005 ETH each. No renewals for holders, no middlemen, and the parent can't take the name back. Parent names are renewed from [$X402ID](#x402id-token) trading fees.
+Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.0015 ETH each. No renewals for holders, no middlemen, and the parent can't take the name back. Parent names are renewed from [$X402ID](#x402id-token) trading fees.
 
 🌐 **Live:** [x402id.eth.link](https://x402id.eth.link)
 🐦 **Twitter/X:** [@x402identity](https://twitter.com/x402identity)
@@ -41,7 +41,7 @@ The registrar interacts directly with the ENS **NameWrapper** contract to issue 
 | `isAvailable(node, label)` | Check if a subname is available |
 | `withdrawFees()` | Owner: withdraw accumulated ETH |
 
-**Mint fee:** 0.005 ETH per name (protocol fee)  
+**Mint fee:** 0.0015 ETH per name (protocol fee, set on-chain by `setMintFee`; clients read `mintFee()`)  
 **Batch:** Up to 10 names per transaction  
 **Platform fee:** 0–0.05 ETH on top of the protocol fee, paid to a platform's treasury via the forwarder (see below)
 
