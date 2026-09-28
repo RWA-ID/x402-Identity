@@ -32,12 +32,24 @@ createAppKit({
     name: "x402 Identity Hub",
     description: "Mint ENS subnames for AI agents — fully onchain.",
     url: "https://x402id.eth.link",
-    icons: ["https://x402id.eth.link/favicon.ico"],
+    // Wallets draw this small and square beside the signing prompt — a square PNG, not .ico/.svg.
+    icons: ["https://x402id.eth.link/favicon-512.png"],
   },
+  // Email/socials are remote features: the Reown dashboard decides them for the whole
+  // project and overrides this block whenever its config fetch succeeds.
   features: {
     analytics: false,
     email: false,
     socials: [],
   },
-  themeMode: "dark",
+  // Match the site: light only (nothing sets html[data-theme="dark"]), Inter, blue accent.
+  themeMode: "light",
+  themeVariables: {
+    "--w3m-accent": "#0080BC",
+    "--w3m-color-mix": "#FAFAF7",
+    "--w3m-color-mix-strength": 20,
+    "--w3m-font-family": '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    "--w3m-border-radius-master": "2px",
+    "--w3m-z-index": 1000,
+  },
 });

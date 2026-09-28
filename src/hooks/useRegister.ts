@@ -4,9 +4,10 @@ import { useAccount, useSwitchChain, useWriteContract, useWaitForTransactionRece
 import { mainnet } from "wagmi/chains";
 import { useFreshMintFee } from "@/hooks/useMintFee";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
+import { writeChainId } from "@/lib/embedded";
 
 export function useRegister() {
-  const { chainId } = useAccount();
+  const { chainId, connector } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
 
@@ -33,7 +34,7 @@ export function useRegister() {
       return;
     }
     writeContract({
-      chainId: mainnet.id,
+      chainId: writeChainId(connector, mainnet.id),
       address: ADDRESSES.mainnet.registrar,
       abi: REGISTRAR_ABI,
       functionName: "register",

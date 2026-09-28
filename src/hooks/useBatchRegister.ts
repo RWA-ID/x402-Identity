@@ -4,9 +4,10 @@ import { useAccount, useSwitchChain, useWriteContract, useWaitForTransactionRece
 import { mainnet } from "wagmi/chains";
 import { useFreshMintFee } from "@/hooks/useMintFee";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
+import { writeChainId } from "@/lib/embedded";
 
 export function useBatchRegister() {
-  const { chainId } = useAccount();
+  const { chainId, connector } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
   const readMintFee = useFreshMintFee();
@@ -34,7 +35,7 @@ export function useBatchRegister() {
     }
     const totalFee = fee * BigInt(rows.length);
     writeContract({
-      chainId: mainnet.id,
+      chainId: writeChainId(connector, mainnet.id),
       address: ADDRESSES.mainnet.registrar,
       abi: REGISTRAR_ABI,
       functionName: "batchRegister",

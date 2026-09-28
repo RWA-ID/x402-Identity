@@ -5,6 +5,7 @@ import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "w
 import { mainnet } from "wagmi/chains";
 import { namehash } from "viem";
 import { buildSetAddressCalls, getLowFees, getResolver, publicResolverAbi } from "@x402identity/widget-core";
+import { writeChainId } from "@/lib/embedded";
 
 export type SetAddressState = "idle" | "signing" | "confirming" | "linked" | "failed";
 
@@ -14,7 +15,7 @@ export type SetAddressState = "idle" | "signing" | "confirming" | "linked" | "fa
  * resolver multicall. The wallet must own every name.
  */
 export function useSetAddress() {
-  const { address, chainId } = useAccount();
+  const { address, chainId, connector } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const client = usePublicClient({ chainId: mainnet.id });
   const { writeContractAsync } = useWriteContract();
@@ -32,7 +33,7 @@ export function useSetAddress() {
       const [resolver, fees] = await Promise.all([getResolver(client, names[0]), getLowFees(client)]);
       const hash = await writeContractAsync({
         ...fees,
-        chainId: mainnet.id,
+        chainId: writeChainId(connector, mainnet.id),
         address: resolver,
         abi: publicResolverAbi,
         functionName: "multicall",

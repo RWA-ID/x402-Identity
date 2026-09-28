@@ -7,6 +7,7 @@ import { base } from "wagmi/chains";
 import { useAppKit } from "@reown/appkit/react";
 import { formatUnits, parseUnits, type Address, type Hex } from "viem";
 import { TOKEN, SWAP_API, ERC20_ABI } from "@/lib/token";
+import { writeChainId } from "@/lib/embedded";
 
 type Side = "buy" | "sell";
 
@@ -42,7 +43,7 @@ async function callSwapApi(endpoint: "price" | "quote", side: Side, amount: bigi
 
 export function TokenSwap() {
   const config = useConfig();
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected, chainId, connector } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { open } = useAppKit();
 
@@ -113,7 +114,7 @@ export function TokenSwap() {
       if (side === "sell" && quote.issues?.allowance) {
         setBusy(`Approve ${TOKEN.symbol} in your wallet…`);
         const approveHash = await writeContract(config, {
-          chainId: base.id,
+          chainId: writeChainId(connector, base.id),
           address: TOKEN.address,
           abi: ERC20_ABI,
           functionName: "approve",
@@ -131,7 +132,7 @@ export function TokenSwap() {
 
       setBusy("Confirm the swap in your wallet…");
       const hash = await sendTransaction(config, {
-        chainId: base.id,
+        chainId: writeChainId(connector, base.id),
         to: quote.transaction.to,
         data: quote.transaction.data,
         value: BigInt(quote.transaction.value),
