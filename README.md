@@ -89,13 +89,30 @@ import { namehash, parseEther } from "viem";
 />
 ```
 
+Already have a wallet modal (Reown AppKit, RainbowKit)? Pass your wagmi clients and a connect handler so the widget uses the same wallet instead of `window.ethereum` (`onConnect` needs `widget-react` 0.5.0+):
+
+```tsx
+const { address } = useAccount();
+const publicClient = usePublicClient();
+const { data: walletClient } = useWalletClient();
+const { open } = useAppKit(); // or RainbowKit's useConnectModal().openConnectModal
+
+<X402Widget
+  {...props}
+  account={walletClient ? address : undefined}
+  publicClient={publicClient}
+  walletClient={walletClient}
+  onConnect={() => open()}
+/>
+```
+
 ### Widget repo layout
 
 | Path | What it is |
 |------|------------|
 | `contracts/X402RegistrarForwarder.sol` | Payment-splitting forwarder, ERC1155-receiver, owner-tunable fee cap |
 | `packages/widget-core/` | Framework-agnostic viem helpers (ABIs, validation, tx builders) |
-| `packages/widget-react/` | `<X402Widget>` component with fallback connect UI, zero-dep styling |
+| `packages/widget-react/` | `<X402Widget>` component; uses the host wallet via `onConnect`, else `window.ethereum`; zero-dep styling |
 | `packages/mcp-server/` | `@x402identity/mcp` — MCP server for agents (see below) |
 | `packages/embed/embed.js` | Vanilla script-tag loader for non-React sites — **edit this one** |
 | `public/embed.js` | Generated copy of the above (`npm run sync:embed`, runs on every build) |
