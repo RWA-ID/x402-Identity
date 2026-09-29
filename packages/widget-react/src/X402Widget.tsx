@@ -31,6 +31,43 @@ export interface ParentOption {
   label: string;
   /** namehash of the parent */
   node: Hex;
+  /** Short caption under the namespace button, e.g. "Agents". Defaults by label. */
+  description?: string;
+}
+
+export const X402_THEMES = ["light", "dark", "lime", "orange", "purple"] as const;
+export type X402Theme = (typeof X402_THEMES)[number];
+
+const DEFAULT_DESCRIPTIONS: Record<string, string> = {
+  "402bot.eth": "Agents",
+  "402api.eth": "Services",
+  "402mcp.eth": "MCP servers",
+};
+
+function Logo() {
+  return (
+    // width/height attrs: the stylesheet is injected in an effect, after first paint.
+    <svg className="x402id-logo" viewBox="0 0 64 64" width="36" height="36" aria-hidden="true">
+      <defs>
+        <linearGradient id="x402id-logo-silver" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#FAFBFC" />
+          <stop offset=".35" stopColor="#E3E6E9" />
+          <stop offset=".6" stopColor="#CDD1D6" />
+          <stop offset=".85" stopColor="#E9EBEE" />
+          <stop offset="1" stopColor="#F4F5F7" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#x402id-logo-silver)" stroke="#AEB4BB" strokeWidth="1.2" />
+      <rect x="2.5" y="2.5" width="59" height="59" rx="12.5" fill="none" stroke="#FFFFFF" strokeOpacity=".7" strokeWidth="1" />
+      <g stroke="#0A0B0D" strokeWidth="7" strokeLinecap="round">
+        <line x1="18" y1="18" x2="26.5" y2="26.5" />
+        <line x1="46" y1="18" x2="37.5" y2="26.5" />
+        <line x1="18" y1="46" x2="26.5" y2="37.5" />
+        <line x1="46" y1="46" x2="37.5" y2="37.5" />
+      </g>
+      <polygon points="32,25.5 38.5,32 32,38.5 25.5,32" fill="#0080BC" />
+    </svg>
+  );
 }
 
 export interface X402WidgetProps {
@@ -56,7 +93,7 @@ export interface X402WidgetProps {
    */
   onConnect?: () => void;
 
-  theme?: "light" | "dark";
+  theme?: X402Theme;
   blockExplorerUrl?: string;
   onSuccess?: (label: string, parentNode: Hex, txHash: Hex) => void;
 }
@@ -204,39 +241,62 @@ export function X402Widget(props: X402WidgetProps) {
     }
   }
 
-  const theme = props.theme ?? "light";
+  const theme: X402Theme = (X402_THEMES as readonly string[]).includes(props.theme ?? "")
+    ? (props.theme as X402Theme)
+    : "light";
   const fullName = label ? `${label}.${parent.label}` : "";
+  const busy = stage === "submitting" || stage === "confirming";
 
   return (
     <div className="x402id-root" data-theme={theme}>
-      <div className="x402id-h">Claim an x402 identity</div>
+      <div className="x402id-head">
+        <Logo />
+        <div>
+          <div className="x402id-title">Claim an x402 identity</div>
+          <div className="x402id-sub">Permanent ENS subname on Ethereum</div>
+        </div>
+      </div>
 
       {stage !== "success" && (
         <>
-          <div className="x402id-row">
+          {props.parents.length > 1 && (
+            <>
+              <div className="x402id-label">Namespace</div>
+              <div className="x402id-ns" role="radiogroup" aria-label="Namespace">
+                {props.parents.map((p) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={p.label === parent.label}
+                    className="x402id-nsopt"
+                    onClick={() => setParent(p)}
+                    disabled={busy}
+                  >
+                    <span className="x402id-nsname">.{p.label}</span>
+                    <span className="x402id-nsdesc">
+                      {p.description ?? DEFAULT_DESCRIPTIONS[p.label] ?? "Subnames"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="x402id-label">Name</div>
+          <div className="x402id-field">
             <input
               className="x402id-input"
               placeholder="yourname"
+              aria-label="Name"
               value={label}
               onChange={(e) => setLabel(e.target.value.toLowerCase().trim())}
-              disabled={stage === "submitting" || stage === "confirming"}
+              disabled={busy}
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
             />
-            <select
-              className="x402id-select"
-              value={parent.label}
-              onChange={(e) => {
-                const next = props.parents.find((p) => p.label === e.target.value);
-                if (next) setParent(next);
-              }}
-              disabled={stage === "submitting" || stage === "confirming"}
-            >
-              {props.parents.map((p) => (
-                <option key={p.label} value={p.label}>.{p.label}</option>
-              ))}
-            </select>
+            <span className="x402id-suffix">.{parent.label}</span>
           </div>
 
           <div className={`x402id-msg ${error ? "x402id-err" : availability === "free" ? "x402id-ok" : ""}`}>
@@ -290,7 +350,7 @@ export function X402Widget(props: X402WidgetProps) {
             <button
               className="x402id-btn"
               onClick={handleRegister}
-              disabled={!canProceed || stage === "submitting" || stage === "confirming"}
+              disabled={!canProceed || busy}
             >
               {stage === "submitting"
                 ? "Confirm in wallet…"
@@ -338,6 +398,11 @@ export function X402Widget(props: X402WidgetProps) {
           )}
         </div>
       )}
+
+      <div className="x402id-foot">
+        Powered by{" "}
+        <a href="https://x402id.eth.link" target="_blank" rel="noreferrer">x402 Identity</a>
+      </div>
     </div>
   );
 }

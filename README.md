@@ -64,6 +64,8 @@ External platforms can earn from registrations by mounting the x402id widget and
 <script src="https://x402id.eth.link/embed.js" async></script>
 ```
 
+`data-theme` takes `light`, `dark`, `lime`, `orange`, or `purple`. Try them at [/widget-demo](https://x402id.eth.link/widget-demo/).
+
 ### Option 2 — React / Next.js
 
 ```bash

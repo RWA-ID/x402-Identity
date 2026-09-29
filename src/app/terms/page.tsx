@@ -1,4 +1,5 @@
 import { pageMetadata } from "@/lib/seo";
+import { SiteNav } from "@/components/SiteNav";
 
 export const metadata = pageMetadata({
   title: "Terms & Conditions — x402 Identity Hub",
@@ -12,20 +13,7 @@ const UPDATED = "July 14, 2026";
 export default function TermsPage() {
   return (
     <main className="site">
-      <header className="nav">
-        <div className="wrap nav-inner">
-          <a className="brand" href="/" aria-label="x402 Identity Hub">
-            <span className="brand-mark">x</span>
-            <span>x402</span>
-            <span className="brand-sub">/ identity hub</span>
-          </a>
-          <nav className="links">
-            <a href="/">Home</a>
-            <a href="/integrate/">Integrate</a>
-            <a href="/privacy/">Privacy</a>
-          </nav>
-        </div>
-      </header>
+      <SiteNav links={[{ href: "/", label: "Home" }, { href: "/integrate/", label: "Integrate" }, { href: "/privacy/", label: "Privacy" }]} />
 
       <section style={{ padding: "72px 0 32px" }}>
         <div className="wrap" style={{ maxWidth: 760 }}>

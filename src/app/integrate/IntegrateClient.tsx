@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useMintFee } from "@/hooks/useMintFee";
+import { SiteNav } from "@/components/SiteNav";
+import { ChainStrip } from "@/components/ChainStrip";
 
 const FORWARDER = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
@@ -80,21 +82,15 @@ export default function IntegratePage() {
   const { feeEth } = useMintFee();
   return (
     <main className="site">
-      <header className="nav">
-        <div className="wrap nav-inner">
-          <a className="brand" href="/" aria-label="x402 Identity Hub">
-            <span className="brand-mark">x</span>
-            <span>x402</span>
-            <span className="brand-sub">/ identity hub</span>
-          </a>
-          <nav className="links">
-            <a href="/">Home</a>
-            <a href="/#namespaces">Namespaces</a>
-            <a href="/#architecture">Architecture</a>
-            <a href="/#developers">Developers</a>
-          </nav>
-        </div>
-      </header>
+      <SiteNav
+        links={[
+          { href: "/", label: "Home" },
+          { href: "/#namespaces", label: "Namespaces" },
+          { href: "/#architecture", label: "Architecture" },
+          { href: "/#developers", label: "Developers" },
+          { href: "/widget-demo/", label: "Widget demo" },
+        ]}
+      />
 
       <section style={{ padding: "80px 0 40px" }}>
         <div className="wrap">
@@ -152,7 +148,8 @@ export default function IntegratePage() {
             <span className="mono">data-treasury</span> (your address, required),{" "}
             <span className="mono">data-platform-fee-wei</span> (in wei),{" "}
             <span className="mono">data-parents</span> (subset of supported parents),{" "}
-            <span className="mono">data-theme</span> (<span className="mono">light</span> or <span className="mono">dark</span>).
+            <span className="mono">data-theme</span> (<span className="mono">light</span>, <span className="mono">dark</span>,{" "}
+            <span className="mono">lime</span>, <span className="mono">orange</span>, or <span className="mono">purple</span>).
           </p>
         </div>
       </section>
@@ -243,15 +240,21 @@ export default function IntegratePage() {
         </div>
       </section>
 
+      <section className="section-divider" style={{ padding: "48px 0" }}>
+        <div className="wrap">
+          <ChainStrip />
+        </div>
+      </section>
+
       <section className="section-divider" style={{ padding: "48px 0 96px" }}>
         <div className="wrap">
           <h2>Live demo</h2>
           <p style={{ marginTop: 16, maxWidth: "60ch", color: "var(--muted)" }}>
-            See the widget in action with adjustable theme and platform fee — it&apos;s wired to the same mainnet
-            forwarder you&apos;d ship.
+            Try all five themes, pick which namespaces to offer, set a platform fee, and copy the embed code it
+            generates — the preview is wired to the same mainnet forwarder you&apos;d ship.
           </p>
           <a href="/widget-demo/" className="btn btn-primary btn-lg" style={{ marginTop: 20, display: "inline-flex" }}>
-            Open demo <span className="arrow">→</span>
+            Open the widget playground <span className="arrow">→</span>
           </a>
         </div>
       </section>

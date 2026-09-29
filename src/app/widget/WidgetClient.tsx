@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { namehash, isAddress, type Address, type Hex } from "viem";
 import { mainnet } from "viem/chains";
-import { X402Widget } from "@x402identity/widget-react";
+import { X402Widget, X402_THEMES, type X402Theme } from "@x402identity/widget-react";
 
 const FORWARDER: Address = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
@@ -15,7 +15,7 @@ type ParentLabel = (typeof ALLOWED_PARENTS)[number];
 interface Parsed {
   treasury: Address;
   platformFeeWei: bigint;
-  theme: "light" | "dark";
+  theme: X402Theme;
   parents: { label: ParentLabel; node: Hex }[];
   error?: string;
 }
@@ -35,7 +35,9 @@ function parseParams(qs: string): Parsed | { error: string } {
   }
 
   const themeRaw = (p.get("theme") ?? "light").toLowerCase();
-  const theme: "light" | "dark" = themeRaw === "dark" ? "dark" : "light";
+  const theme: X402Theme = (X402_THEMES as readonly string[]).includes(themeRaw)
+    ? (themeRaw as X402Theme)
+    : "light";
 
   const parentsRaw = (p.get("parents") ?? ALLOWED_PARENTS.join(","))
     .split(",")
@@ -96,7 +98,7 @@ export default function StandaloneWidget() {
       ref={rootRef}
       style={{
         padding: 12,
-        background: config.theme === "dark" ? "#0b0b0c" : "transparent",
+        background: "transparent",
         minHeight: "100%",
       }}
     >

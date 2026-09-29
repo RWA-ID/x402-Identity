@@ -5,7 +5,7 @@
  *        data-treasury="0x..."
  *        data-platform-fee-wei="5000000000000000"
  *        data-chain-id="1"
- *        data-theme="light"
+ *        data-theme="light"            (light | dark | lime | orange | purple)
  *        data-parents="402bot.eth,402api.eth"
  *        data-height="520"></div>
  *   <script src="https://x402id.eth.link/embed.js" async></script>
