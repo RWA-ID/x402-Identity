@@ -171,6 +171,20 @@ Like the widget, anyone can run this server with a treasury configured and earn 
 
 ---
 
+## Agentic Market / x402 Bazaar
+
+x402 Identity Hub is listed on [agentic.market](https://agentic.market/services/x402id-availability-dmpay-workers-dev) through the x402 Bazaar, as a paid name-availability check:
+
+```
+GET https://x402id-availability.dmpay.workers.dev/v1/availability/:name    # e.g. mybot.402bot.eth
+```
+
+It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C), and returns `available`, the live mint fee and a link to register here. It's there for discovery: someone browsing the marketplace asks their agent to check a name, and the answer sends them to the site. A malformed name or a failed chain read is never charged.
+
+**Source + deploy:** [`workers/availability/`](workers/availability)
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -289,6 +303,7 @@ x402-identity-hub/
 │       ├── token.ts               # $X402ID constants + swap API URL
 │       └── parents.ts             # Parent node configs (namehashes)
 ├── workers/
+│   ├── availability/              # Paid x402 name check, listed on agentic.market
 │   └── swap/                      # Cloudflare Worker proxying the 0x Swap API
 ├── hardhat.config.js
 ├── next.config.mjs
