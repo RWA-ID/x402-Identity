@@ -1,0 +1,14 @@
+{
+  "name": "x402id-availability",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // @coinbase/x402 reads process.env and signs CDP JWTs with node crypto.
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "vars": {
+    "PUBLIC_URL": "https://x402id-availability.dmpay.workers.dev"
+  }
+  // Secrets (wrangler secret put …) — never commit them:
+  //   CDP_API_KEY_ID, CDP_API_KEY_SECRET  — CDP facilitator (Base mainnet + Bazaar)
+  //   MAINNET_RPC_URL (optional)          — server-side RPC; public RPCs are the fallback
+}
