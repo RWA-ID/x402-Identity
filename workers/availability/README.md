@@ -4,8 +4,8 @@ Paid name-availability check for x402 Identity Hub, listed in the x402 Bazaar (a
 
 `GET /v1/availability/:name` — e.g. `/v1/availability/mybot.402bot.eth` — costs **$0.001 USDC on Base**, paid to the x402id Safe `0x8E61…631C`. It returns `available`, the current `mintFee`, `registerUrl` (the site's home page) and a one-line `message` for the agent to relay. `GET /` is free and describes the service.
 
-- Malformed names get a 400 **before** the paywall, so nobody pays for one.
-- The middleware settles only on a < 400 response, so a failed mainnet read (502) is never charged.
+- Every request gets the 402 first: validators (agentic.market's `/validate`) probe the literal `/v1/availability/:name` and fail on anything else.
+- The middleware only *verifies* before the handler and settles only on a < 400 response, so a malformed name (400) or a failed mainnet read (502) is never charged. Proven live: a paid call for `ab.402bot.eth` got its 400 and the payer's balance didn't move.
 - Read-only: no wallet, no ETH float.
 
 ## Deploy

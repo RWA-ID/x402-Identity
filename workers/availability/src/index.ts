@@ -174,18 +174,16 @@ app.get("/", (c) =>
   }),
 );
 
-// Reject malformed names BEFORE the paywall, so nobody pays for a 400.
-app.use("/v1/availability/:name", async (c, next) => {
-  const parsed = parseName(c.req.param("name"));
-  if ("error" in parsed) return c.json({ error: parsed.error, registerUrl: SITE }, 400);
-  return next();
-});
-
+// Every request meets the paywall first — validators (agentic.market's
+// /validate) probe the literal `/v1/availability/:name` and require a 402.
+// A malformed name is still never charged: the handler's 400 cancels
+// settlement, and the payment is only verified, not settled, before it runs.
 app.use("/v1/availability/:name", (c, next) => getPayment(c.env)(c, next));
 
 app.get("/v1/availability/:name", async (c) => {
   const parsed = parseName(c.req.param("name"));
-  if ("error" in parsed) return c.json({ error: parsed.error }, 400);
+  // >= 400, so the payment is not settled.
+  if ("error" in parsed) return c.json({ error: parsed.error, registerUrl: SITE }, 400);
   const { label, parent } = parsed;
   const name = `${label}.${parent}`;
 
