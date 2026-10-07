@@ -8,7 +8,10 @@
  *   node scripts/extend-subname-expiry.mjs
  *
  * How it works:
- *   1. Fetches all SubnameMinted events from both registrars (old + new)
+ *   1. Fetches every NewOwner event on the ENS registry under each parent.
+ *      This finds every subname however it was created — registrar mints,
+ *      forwarder mints, and names issued by hand via NameWrapper (which emit
+ *      no SubnameMinted event and were missed by the old registrar-log scan)
  *   2. Calls nameWrapper.extendExpiry(parentNode, labelhash, type(uint64).max)
  *      for each one — capped automatically at the current parent expiry
  *   3. PARENT_CANNOT_CONTROL does NOT block extendExpiry, so this works even
@@ -16,7 +19,7 @@
  */
 
 import { createWalletClient, createPublicClient, http, keccak256, toBytes,
-         decodeAbiParameters, parseAbiParameters } from "viem";
+         hexToBytes, namehash, encodePacked } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
 import { config } from "dotenv";
@@ -24,21 +27,15 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 const NAME_WRAPPER = "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401";
+const ENS_REGISTRY = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 
-// Both registrars — old one (fuses=0) and new one (fuses=65536)
-const REGISTRARS = [
-  { address: "0x0a9b0d20e9193dc5479ab98154124f4e2f569444", fromBlock: 0 },          // old
-  { address: "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633", fromBlock: 24779603 },   // new
-];
+const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"];
 
-// SubnameMinted(bytes32 indexed parentNode, string label, bytes32 subnameNode,
-//               address indexed minter, uint256 fee)
-// topic0 = keccak256 of signature above
-const TOPIC0 = "0x8fd05628e8c8091170a3b692a1bcb11cf2b13b6020e3ff27b62753bfaa419b0d";
+// NewOwner(bytes32 indexed node, bytes32 indexed label, address owner)
+const NEW_OWNER_TOPIC = keccak256(toBytes("NewOwner(bytes32,bytes32,address)"));
 
-// Non-indexed fields in data: label (string), subnameNode (bytes32), fee (uint256)
-// minter is indexed → in topics[2], NOT in data
-const DATA_PARAMS = parseAbiParameters("string label, bytes32 subnameNode, uint256 fee");
+// Etherscan getLogs returns at most 1000 records per call
+const ETHERSCAN_PAGE = 1000;
 
 const NAME_WRAPPER_ABI = [
   {
@@ -63,7 +60,24 @@ const NAME_WRAPPER_ABI = [
       { name: "expiry", type: "uint64"  },
     ],
   },
+  {
+    name: "names",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "node", type: "bytes32" }],
+    outputs: [{ type: "bytes" }],
+  },
 ];
+
+// DNS wire format (03 6d7070 06 343032626f74 03 657468 00) → "mpp.402bot.eth"
+function decodeDnsName(hex) {
+  const b = hexToBytes(hex);
+  const parts = [];
+  for (let i = 0; i < b.length && b[i] !== 0; i += b[i] + 1) {
+    parts.push(new TextDecoder().decode(b.slice(i + 1, i + 1 + b[i])));
+  }
+  return parts.join(".");
+}
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 if (!PRIVATE_KEY) throw new Error("PRIVATE_KEY not set in .env.local");
@@ -77,37 +91,42 @@ const publicClient = createPublicClient({ chain: mainnet, transport });
 const walletClient = createWalletClient({ account, chain: mainnet, transport });
 
 console.log("Wallet:", account.address);
-console.log("Fetching SubnameMinted events from both registrars via Etherscan...\n");
+console.log("Fetching every subname under each parent from the ENS registry via Etherscan...\n");
 
-// ── 1. Fetch events from all registrars ──────────────────────────────────────
-const allNames = new Map(); // subnameNode → { parentNode, label }
+// ── 1. Fetch NewOwner events for each parent ─────────────────────────────────
+const allNames = new Map(); // subnameNode → { parentNode, labelhash }
 
-for (const { address, fromBlock } of REGISTRARS) {
-  const url = `https://api.etherscan.io/v2/api?chainid=1&module=logs&action=getLogs` +
-    `&address=${address}&topic0=${TOPIC0}` +
-    `&fromBlock=${fromBlock}&toBlock=latest&apikey=${ETHERSCAN_KEY}`;
+for (const parent of PARENTS) {
+  const parentNode = namehash(parent);
+  let count = 0;
 
-  const res  = await fetch(url);
-  const json = await res.json();
+  for (let page = 1; ; page++) {
+    const url = `https://api.etherscan.io/v2/api?chainid=1&module=logs&action=getLogs` +
+      `&address=${ENS_REGISTRY}&topic0=${NEW_OWNER_TOPIC}&topic1=${parentNode}&topic0_1_opr=and` +
+      `&fromBlock=0&toBlock=latest&page=${page}&offset=${ETHERSCAN_PAGE}&apikey=${ETHERSCAN_KEY}`;
 
-  if (json.status !== "1" || !Array.isArray(json.result)) {
-    console.log(`  No events from ${address} (${json.message})`);
-    continue;
-  }
+    const json = await (await fetch(url)).json();
 
-  for (const log of json.result) {
-    const parentNode = log.topics[1]; // indexed bytes32
-    try {
-      const [label, subnameNode] = decodeAbiParameters(DATA_PARAMS, log.data);
-      if (!allNames.has(subnameNode)) {
-        allNames.set(subnameNode, { parentNode, label });
-      }
-    } catch (e) {
-      console.log(`  ⚠️  Failed to decode log from ${address}: ${e.message}`);
+    // "No records found" is a real empty result; anything else is an error and
+    // must stop the run — a failed fetch must never read as "no subnames"
+    if (!Array.isArray(json.result)) {
+      if (json.message === "No records found") break;
+      throw new Error(`Etherscan getLogs failed for ${parent}: ${json.message} ${json.result}`);
     }
+
+    for (const log of json.result) {
+      const labelhash   = log.topics[2];
+      const subnameNode = keccak256(encodePacked(["bytes32", "bytes32"], [parentNode, labelhash]));
+      if (!allNames.has(subnameNode)) {
+        allNames.set(subnameNode, { parentNode, labelhash });
+        count++;
+      }
+    }
+
+    if (json.result.length < ETHERSCAN_PAGE) break;
   }
 
-  console.log(`  ${address}: ${json.result.length} event(s)`);
+  console.log(`  ${parent}: ${count} subname(s)`);
 }
 
 console.log(`\nTotal unique subnames: ${allNames.size}\n`);
@@ -124,34 +143,46 @@ let succeeded = 0;
 let skipped   = 0;
 let failed    = 0;
 
-for (const [subnameNode, { parentNode, label }] of allNames) {
-  const labelhash = keccak256(toBytes(label));
-  const tokenId   = BigInt(subnameNode);
+// Parent expiries — read once; a failed read must stop the run, not read as 0
+const parentExpiries = new Map();
+for (const parent of PARENTS) {
+  const pd = await publicClient.readContract({
+    address: NAME_WRAPPER, abi: NAME_WRAPPER_ABI,
+    functionName: "getData", args: [BigInt(namehash(parent))],
+  });
+  parentExpiries.set(namehash(parent), pd[2]);
+}
 
-  // Read current subname expiry
-  let currentExpiry;
+for (const [subnameNode, { parentNode, labelhash }] of allNames) {
+  const tokenId = BigInt(subnameNode);
+
+  // Read current subname expiry + its name for display
+  let currentExpiry, label;
   try {
     const d = await publicClient.readContract({
       address: NAME_WRAPPER, abi: NAME_WRAPPER_ABI,
       functionName: "getData", args: [tokenId],
     });
     currentExpiry = d[2];
+    const dns = await publicClient.readContract({
+      address: NAME_WRAPPER, abi: NAME_WRAPPER_ABI,
+      functionName: "names", args: [subnameNode],
+    });
+    label = dns === "0x" ? subnameNode : decodeDnsName(dns);
   } catch {
-    console.log(`  ⚠️  ${label} — could not read data, skipping`);
+    console.log(`  ⚠️  ${subnameNode} — could not read data, skipping`);
     skipped++;
     continue;
   }
 
-  // Read parent expiry
-  let parentExpiry = 0n;
-  try {
-    const pd = await publicClient.readContract({
-      address: NAME_WRAPPER, abi: NAME_WRAPPER_ABI,
-      functionName: "getData", args: [BigInt(parentNode)],
-    });
-    parentExpiry = pd[2];
-  } catch { /* ignore */ }
+  // Expiry 0 = never issued with an expiry (or unwrapped) — nothing live to keep alive
+  if (currentExpiry === 0n) {
+    console.log(`  –  ${label} — no expiry set (not an active wrapped name), skipping`);
+    skipped++;
+    continue;
+  }
 
+  const parentExpiry = parentExpiries.get(parentNode);
   const currentDate = new Date(Number(currentExpiry) * 1000).toISOString().split("T")[0];
   const parentDate  = new Date(Number(parentExpiry)  * 1000).toISOString().split("T")[0];
 
@@ -169,7 +200,9 @@ for (const [subnameNode, { parentNode, label }] of allNames) {
       functionName: "extendExpiry",
       args: [parentNode, labelhash, MAX_EXPIRY],
     });
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+    // waitForTransactionReceipt does not throw on a revert — check status explicitly
+    if (receipt.status !== "success") throw new Error(`reverted (tx: ${tx})`);
     console.log(`     ✅ Done  (tx: ${tx})`);
     succeeded++;
   } catch (err) {
