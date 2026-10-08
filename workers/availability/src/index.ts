@@ -18,6 +18,9 @@ import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { createPublicClient, fallback, formatEther, http, namehash, type Address } from "viem";
 import { mainnet } from "viem/chains";
+// The ERC-8004 registration file for agent 8453:98739, the same JSON its
+// on-chain agentURI points at (ipfs://bafkreifp7y…5oua). Update both together.
+import agentRegistration from "./agent-registration.json";
 
 type Env = {
   CDP_API_KEY_ID: string;
@@ -173,6 +176,10 @@ app.get("/", (c) =>
     registerUrl: SITE,
   }),
 );
+
+// Free — ERC-8004 endpoint-domain proof. 8004scan verifies this domain belongs
+// to the agent when the file's `registrations` matches it on-chain.
+app.get("/.well-known/agent-registration.json", (c) => c.json(agentRegistration));
 
 // Every request meets the paywall first — validators (agentic.market's
 // /validate) probe the literal `/v1/availability/:name` and require a 402.

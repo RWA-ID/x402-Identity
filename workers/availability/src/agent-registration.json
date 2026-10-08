@@ -1,0 +1,53 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "x402 Identity Hub",
+  "description": "Paid name-availability check for x402 Identity Hub: ENS identity names for AI agents, APIs and MCP servers under 402bot.eth, 402api.eth and 402mcp.eth. GET /v1/availability/:name (e.g. mybot.402bot.eth) costs $0.001 USDC on Base via x402 and returns whether the name is free, the live mint fee and where to register it at x402id.eth.limo.",
+  "image": "ipfs://bafkreibw2rpmv4j4dlaate2qd2xzkxyha72y7xjvje2qk2fi3el6y7fdqa",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://x402id.eth.limo/"
+    },
+    {
+      "name": "availability",
+      "version": "v1",
+      "endpoint": "https://x402id-availability.dmpay.workers.dev/v1/availability/:name",
+      "description": "GET, x402 exact scheme: $0.001 USDC on Base (eip155:8453). Returns { name, available, mintFee, registerUrl, message }."
+    },
+    {
+      "name": "agentWallet",
+      "endpoint": "eip155:8453:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C"
+    },
+    {
+      "name": "ENS",
+      "version": "v1",
+      "endpoint": "402bot.eth"
+    },
+    {
+      "name": "ENS",
+      "version": "v1",
+      "endpoint": "402api.eth"
+    },
+    {
+      "name": "ENS",
+      "version": "v1",
+      "endpoint": "402mcp.eth"
+    },
+    {
+      "name": "registrar-contract",
+      "version": "v1",
+      "endpoint": "eip155:1:0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633"
+    }
+  ],
+  "x402Support": true,
+  "active": true,
+  "supportedTrust": [
+    "reputation"
+  ],
+  "registrations": [
+    {
+      "agentId": 98739,
+      "agentRegistry": "eip155:8453:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ]
+}
