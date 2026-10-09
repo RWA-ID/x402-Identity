@@ -183,6 +183,7 @@ A closed, append-only set, which no release renumbers or reuses:
 - `inconclusive` MUST NOT be presented as a failed binding.
 - When it is shown to a user, the name MUST be the verified name, never the declared one, and only after `payee-bound`.
 - Results MAY be cached for at most the challenge's `maxTimeoutSeconds`, keyed by `(name, origin, network, payTo)`.
+- A verdict describes the name at `checked_at`, nothing later. Records, fuses and expiry can all change after it, so a stored verdict MUST keep `checked_at` and `expires_at` with it and MUST NOT be read as a statement about any later time. A `parent_can_control: false` recorded today says nothing about the name after its `expires_at`.
 
 ## Server and operator guidance
 
