@@ -93,3 +93,4 @@ export async function registerVia(
     chain: wallet.chain,
   });
 }
+export * from "./payee.js";
