@@ -739,6 +739,8 @@ footer {
   border-radius: var(--radius);
   background: var(--bg-elev);
   font-family: var(--mono); font-size: 15px;
+  /* JetBrains Mono joins "//" into a ligature that reads as one slash in a URL. */
+  font-variant-ligatures: none;
   color: var(--ink);
   transition: border-color .15s ease, box-shadow .15s ease;
 }
@@ -1191,3 +1193,10 @@ html:not([data-theme="dark"]) .arch-box::before {
   .verify-manual .input-row { flex-direction: column; }
   .verify-select { flex: none !important; }
 }
+.verify-origins ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.verify-origins li {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.verify-origins li[data-removed="true"] .mono { text-decoration: line-through; color: var(--muted-2); }

@@ -42,13 +42,25 @@ type Check = {
   verdicts: PayeeVerdict[] | null;
 };
 
-function planFor(ep: Endpoint): PayeePlan | null {
+/**
+ * Records for one name. `keep` are origins the name already lists and the
+ * user chose to keep: writing org.x402.origins replaces the whole list, so a
+ * seller with two live origins would otherwise lose one.
+ */
+function planFor(ep: Endpoint, keep: string[]): PayeePlan | null {
   const c = ep.challenge;
   const origin = c?.origin ?? originOf(ep.url);
   if (!origin) return null;
-  if (c?.readable && c.accepts?.length) return planPayeeRecords([origin], c.accepts);
+  const origins = [...keep, origin];
+  if (c?.readable && c.accepts?.length) return planPayeeRecords(origins, c.accepts);
   if (!isAddress(ep.manual.payTo)) return null;
-  return planPayeeRecords([origin], [{ network: ep.manual.network, payTo: ep.manual.payTo }]);
+  return planPayeeRecords(origins, [{ network: ep.manual.network, payTo: ep.manual.payTo }]);
+}
+
+/** Origins the name lists now, minus the ones the user removed. */
+function keptOrigins(cur: Current | "failed" | undefined, dropped: string[] | undefined): string[] {
+  if (!cur || cur === "failed") return [];
+  return cur.origins.split(/\s+/).filter((o) => o && !(dropped ?? []).includes(o));
 }
 
 function reasonText(v: PayeeVerdict): string {
@@ -90,6 +102,7 @@ export default function VerifyClient() {
   const [endpoints, setEndpoints] = useState<Record<string, Endpoint>>({});
   const [current, setCurrent] = useState<Record<string, Current | "failed">>({});
   const [checks, setChecks] = useState<Record<string, Check>>({});
+  const [dropped, setDropped] = useState<Record<string, string[]>>({});
 
   // ?name=a.402bot.eth,b.402api.eth — the post-mint link preselects its names.
   useEffect(() => {
@@ -157,8 +170,11 @@ export default function VerifyClient() {
     }
   };
 
-  const plans = selected.map((name) => ({ name, plan: planFor(ep(name)) }));
-  const ready = plans.length > 0 && plans.every((p) => p.plan !== null);
+  const plans = selected.map((name) => ({ name, plan: planFor(ep(name), keptOrigins(current[name], dropped[name])) }));
+  // Never write before the current records are known: an unread origins list
+  // would be overwritten blind.
+  const recordsKnown = plans.every((p) => p.plan === null || (current[p.name] && current[p.name] !== "failed"));
+  const ready = plans.length > 0 && plans.every((p) => p.plan !== null) && recordsKnown;
 
   // Show what each write would replace.
   const planKey = JSON.stringify(plans.map((p) => [p.name, p.plan?.addrs.map((a) => a.network)]));
@@ -317,8 +333,11 @@ extensions: {
               {selected.map((name) => {
                 const e = ep(name);
                 const c = e.challenge;
-                const plan = planFor(e);
                 const cur = current[name];
+                const plan = planFor(e, keptOrigins(cur, dropped[name]));
+                const newOrigin = c?.origin ?? originOf(e.url);
+                const listed = cur && cur !== "failed" ? cur.origins.split(/\s+/).filter(Boolean) : [];
+                const others = listed.filter((o) => o !== newOrigin);
                 const unreadable = c && (!c.readable || !c.accepts?.length);
                 return (
                   <div key={name} className="verify-endpoint">
@@ -389,6 +408,39 @@ extensions: {
                           </tr>
                         </tbody>
                       </table>
+                    )}
+                    {plan && others.length > 0 && (
+                      <div className="verify-origins">
+                        <p className="verify-note">
+                          This name already lists other origins. Keep the ones you still serve; remove stale ones.
+                        </p>
+                        <ul>
+                          {others.map((o) => {
+                            const removed = (dropped[name] ?? []).includes(o);
+                            return (
+                              <li key={o} data-removed={removed}>
+                                <span className="mono">{o}</span>
+                                <button
+                                  className="success-link"
+                                  onClick={() =>
+                                    setDropped((d) => ({
+                                      ...d,
+                                      [name]: removed ? (d[name] ?? []).filter((x) => x !== o) : [...(d[name] ?? []), o],
+                                    }))
+                                  }
+                                >
+                                  {removed ? "Keep" : "Remove"}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                    {plan && cur === "failed" && (
+                      <p className="verify-error">
+                        Couldn&apos;t read this name&apos;s current records, so writing is paused to avoid overwriting them. Read the 402 again to retry.
+                      </p>
                     )}
                     {c?.extensions && "payee-name" in c.extensions && (
                       <p className="verify-note">
