@@ -202,10 +202,10 @@ It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`]
 
 The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
 
-**IPFS CID:** `bafybeihidf3xvdi3nquc2m2r7cgbddub6x3whkx5wjytwe4nu6as7ptq7q`
+**IPFS CID:** `bafybeifsk7i2527j5nmtdaoxrcqqmapvjvq3fltgauf6sajbsddu2oixma`
 
 ```
-https://ipfs.io/ipfs/bafybeihidf3xvdi3nquc2m2r7cgbddub6x3whkx5wjytwe4nu6as7ptq7q/
+https://ipfs.io/ipfs/bafybeifsk7i2527j5nmtdaoxrcqqmapvjvq3fltgauf6sajbsddu2oixma/
 ```
 
 ---
