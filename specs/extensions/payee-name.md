@@ -129,7 +129,7 @@ Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-
 3. **Expiry.** Compute the name's effective expiry: the earliest expiry along its path up to and including the `.eth` second-level name (NameWrapper expiry for wrapped names, BaseRegistrar `nameExpires` for the unwrapped second-level name). An expired ENS name **still resolves**, so this check cannot be skipped.
    - past expiry and grace period → `false`, `name-expired`
    - inside the `.eth` grace period → `inconclusive`, `name-in-grace`
-4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402.
+4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402. Listing an origin is an authorization by the name's owner, not a claim to control the host's DNS, so a tenant on a platform suffix can list its tenant origin. A verifier checks only `O` and never contacts the other listed origins, so an origin the operator has stopped serving cannot make a challenge fail.
 5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
 6. **Pass.** All checks hold for an accept → `true`, `payee-bound`, `accepts_index: i`.
 
@@ -183,12 +183,14 @@ A closed, append-only set, which no release renumbers or reuses:
 ## Server and operator guidance
 
 - Set `org.x402.origins` before declaring the name. Otherwise every client reports `origin-not-listed`.
+- Remove origins you no longer serve. A stale entry fails nothing, but it keeps authorizing whoever controls that hostname next (a reassigned tunnel or platform subdomain) to declare your name. The payee check still applies, so such a host can only direct payments to addresses your name lists.
 - Prefer one `addr` record per chain. Use `org.x402.payto` only when you actually rotate or split. Every address listed there is publicly linked to the name.
 - Operators who want unlinkable payees can use separate names. The extension never asks for a reverse record.
 
 ## Security considerations
 
 - **Name replay:** the origin check (step 4) is what binds a declaration to a server. A verifier that skips it validates nothing.
+- **Stale origins:** a listed origin the operator no longer controls can be taken over and declare the name. It passes step 4, but step 5 still limits it to the name's listed `payTo` addresses: it can impersonate the service, not redirect funds.
 - **Expiry:** expired names keep resolving and keep passing forward-lookup checks. Step 3 is required.
 - **Lookalikes:** step 1 refuses non-normalized names. Rendering the name for humans should follow ENSIP-15 display guidance.
 - **Parent control:** subnames whose parent can still control them can be rewritten by the parent. `parent_can_control` exposes this.
