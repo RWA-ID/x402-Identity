@@ -93,6 +93,10 @@ The name in `info.name` MUST already be [ENSIP-15](https://docs.ens.domains/ensi
 
 Per the core extension rules the client echoes `extensions["payee-name"]` unchanged. The extension adds nothing to the payload, and facilitators need no new behavior to settle a payment that carries it.
 
+### Browser clients
+
+The declaration travels inside `PAYMENT-REQUIRED`, so a browser client on another origin can read it only if the server lists that header in `Access-Control-Expose-Headers`. Nothing else is needed: `EXTENSION-RESPONSES` is the facilitator's verify/settle side channel (core spec §7.2.1), is not forwarded to buyers, and plays no part here. Exposure is uneven today: in a 2026-10-09 sample of 32 Bazaar sellers answering 402, 8 exposed `PAYMENT-REQUIRED` cross-origin.
+
 ---
 
 ## ENS records
