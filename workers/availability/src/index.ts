@@ -43,6 +43,10 @@ const SITE = "https://x402id.eth.limo/";
 const ICON = "https://x402id.eth.limo/favicon-512.png";
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"] as const;
 const ROUTE = "/v1/availability/:name";
+// ENS name that authorizes this origin and PAY_TO (specs/extensions/payee-name.md).
+// Its records: org.x402.origins = this worker's origin, Base address = PAY_TO.
+// Change either here and the records must change with it.
+const PAYEE_NAME = "test.402api.eth";
 
 const registrarAbi = [
   {
@@ -132,6 +136,9 @@ function routes(network: typeof BASE | typeof BASE_SEPOLIA): RoutesConfig {
             },
           },
         }),
+        // Mainnet only: the name lists no Base Sepolia address, so declaring it
+        // in test mode would advertise a binding that fails verification.
+        ...(network === BASE ? { "payee-name": { info: { name: PAYEE_NAME } } } : {}),
       },
     },
   };
