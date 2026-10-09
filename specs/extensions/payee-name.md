@@ -95,7 +95,7 @@ Per the core extension rules the client echoes `extensions["payee-name"]` unchan
 
 ### Browser clients
 
-The declaration travels inside `PAYMENT-REQUIRED`, so a browser client on another origin can read it only if the server lists that header in `Access-Control-Expose-Headers`. Nothing else is needed: `EXTENSION-RESPONSES` is the facilitator's verify/settle side channel (core spec §7.2.1), is not forwarded to buyers, and plays no part here. Exposure is uneven today: in a 2026-10-09 sample of 32 Bazaar sellers answering 402, 8 exposed `PAYMENT-REQUIRED` cross-origin.
+The declaration travels inside `PAYMENT-REQUIRED`, so a browser client on another origin can read it only if the server lists that header in `Access-Control-Expose-Headers`. Nothing else is needed: `EXTENSION-RESPONSES` is the facilitator's verify/settle side channel (core spec §7.2.1), is not forwarded to buyers, and plays no part here. Exposure is uneven today. In a 2026-10-09 sample of 200 Bazaar hosts (150 answering 402 with the header), 45 exposed `PAYMENT-REQUIRED` cross-origin, 15 sent CORS headers without exposing it, and 89 sent no CORS headers on the 402 at all.
 
 ---
 
