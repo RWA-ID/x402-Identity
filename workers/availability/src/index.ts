@@ -21,6 +21,7 @@ import { mainnet } from "viem/chains";
 // The ERC-8004 registration file for agent 8453:98739, the same JSON its
 // on-chain agentURI points at (ipfs://bafkreifp7y…5oua). Update both together.
 import agentRegistration from "./agent-registration.json";
+import { checkTarget, readChallenge } from "./challenge.js";
 
 type Env = {
   CDP_API_KEY_ID: string;
@@ -31,6 +32,8 @@ type Env = {
   TEST_FACILITATOR_URL?: string;
   MAINNET_RPC_URL?: string;
   PUBLIC_URL: string;
+  // Rate limiting binding for the free /v1/challenge route (wrangler.jsonc).
+  CHALLENGE_LIMITER?: { limit(opts: { key: string }): Promise<{ success: boolean }> };
 };
 
 // x402id Safe on Base (2-of-3, v1.5.0) — receives the fees.
@@ -187,6 +190,21 @@ app.get("/", (c) =>
 // Free — ERC-8004 endpoint-domain proof. 8004scan verifies this domain belongs
 // to the agent when the file's `registrations` matches it on-chain.
 app.get("/.well-known/agent-registration.json", (c) => c.json(agentRegistration));
+
+// Free — reads another endpoint's 402 terms for the site's /verify/ page,
+// which usually can't read them cross-origin. Outside the paywall.
+app.get("/v1/challenge", async (c) => {
+  const ip = c.req.header("cf-connecting-ip") ?? "unknown";
+  if (c.env.CHALLENGE_LIMITER && !(await c.env.CHALLENGE_LIMITER.limit({ key: ip })).success) {
+    return c.json({ error: "Too many checks — wait a minute and retry." }, 429);
+  }
+  const target = checkTarget(c.req.query("url"));
+  if (typeof target === "string") return c.json({ error: target }, 400);
+  const method = (c.req.query("method") ?? "GET").toUpperCase();
+  if (!["GET", "POST", "HEAD"].includes(method)) return c.json({ error: "method must be GET, POST or HEAD" }, 400);
+  const result = await readChallenge(target, method);
+  return result.ok ? c.json(result.body) : c.json({ error: result.error }, result.status as 502);
+});
 
 // Every request meets the paywall first — validators (agentic.market's
 // /validate) probe the literal `/v1/availability/:name` and require a 402.

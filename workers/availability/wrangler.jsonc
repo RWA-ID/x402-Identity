@@ -5,6 +5,10 @@
   // @coinbase/x402 reads process.env and signs CDP JWTs with node crypto.
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  // 30 /v1/challenge reads per minute per IP.
+  "ratelimits": [
+    { "name": "CHALLENGE_LIMITER", "namespace_id": "4021", "simple": { "limit": 30, "period": 60 } }
+  ],
   "vars": {
     "PUBLIC_URL": "https://x402id-availability.dmpay.workers.dev"
   }
