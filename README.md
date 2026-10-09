@@ -21,6 +21,8 @@ x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS 
 | `[name].402api.eth` | API-facing agents and services |
 | `[name].402mcp.eth` | MCP (Model Context Protocol) servers |
 
+A name can also prove who gets paid: link it to your x402 endpoint at [x402id.eth.limo/verify](https://x402id.eth.limo/verify/) and clients can check that the payout address in your 402 belongs to you. See [Verified Payee](#verified-payee-payee-name).
+
 ---
 
 ## Smart Contracts
@@ -116,10 +118,12 @@ const { open } = useAppKit(); // or RainbowKit's useConnectModal().openConnectMo
 | `packages/widget-core/` | Framework-agnostic viem helpers (ABIs, validation, tx builders) |
 | `packages/widget-react/` | `<X402Widget>` component; uses the host wallet via `onConnect`, else `window.ethereum`; zero-dep styling |
 | `packages/mcp-server/` | `@x402identity/mcp` — MCP server for agents (see below) |
+| `packages/payee/` | `@x402identity/payee` — verifier for the `payee-name` extension (see [Verified Payee](#verified-payee-payee-name)) |
 | `packages/embed/embed.js` | Vanilla script-tag loader for non-React sites — **edit this one** |
 | `public/embed.js` | Generated copy of the above (`npm run sync:embed`, runs on every build) |
 | `src/app/widget/` | Standalone widget page (iframe target for `embed.js`) |
 | `src/app/integrate/` | Public integrator-facing docs page |
+| `src/app/verify/` | Verified Payee wizard: link a name to an x402 endpoint |
 
 ---
 
@@ -150,6 +154,7 @@ const { open } = useAppKit(); // or RainbowKit's useConnectModal().openConnectMo
 | `batch_register` | Mint up to 10 names in one transaction |
 | `resolve_identity` | ENS name → address, owner, text records |
 | `list_names` | All x402 names minted by an address (onchain events) |
+| `verify_payee` | Before paying an x402 URL, check that its `payee-name` ENS name authorizes the origin and `payTo` |
 
 ### Modes
 
@@ -181,7 +186,54 @@ GET https://x402id-availability.dmpay.workers.dev/v1/availability/:name    # e.g
 
 It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C), and returns `available`, the live mint fee and a link to register here. It's there for discovery: someone browsing the marketplace asks their agent to check a name, and the answer sends them to the site. A malformed name or a failed chain read is never charged.
 
+Its 402 declares `payee-name: test.402api.eth`, the live reference instance for [Verified Payee](#verified-payee-payee-name). The same worker serves two free routes:
+
+| Route | Purpose |
+|-------|---------|
+| `GET /v1/challenge?url=…` | Reads another endpoint's 402 server-side and returns only its payment terms, for `/verify/` (most sellers don't expose `PAYMENT-REQUIRED` to browsers). https on public hostnames only, 30 reads/min per IP |
+| `GET /.well-known/agent-registration.json` | ERC-8004 registration file for agent `8453:98739` |
+
 **Source + deploy:** [`workers/availability/`](workers/availability)
+
+---
+
+## Verified Payee (`payee-name`)
+
+A client paying an x402 endpoint can't tell who the `payTo` address belongs to. `payee-name` fixes that with an ENS name: the 402 declares the name, and the name's owner lists the origins and payout addresses it authorizes. Those records are set by the owner's key on Ethereum, so the check needs no DNS. It works for a seller on `*.workers.dev` or `*.vercel.app` who controls no domain.
+
+**Set it up:** [x402id.eth.limo/verify](https://x402id.eth.limo/verify/) runs a three-step wizard.
+
+1. **Choose names**: the x402 names your wallet holds now.
+2. **Link endpoints**: paste a paid route. The page reads its 402 and fills in the origin and payout addresses, shows the current and new records side by side, and writes them in one signature.
+3. **Verify**: add one line to your 402 and redeploy. The page checks the records and the declaration, and shows **Verified payee** when both pass.
+
+**What gets written** on the name:
+
+| Record | Value |
+|--------|-------|
+| text `org.x402.origins` | Origins allowed to declare the name (space-separated) |
+| address record per chain | The primary `payTo` on that chain (Base = coin type `2147492101`) |
+| text `org.x402.payto` | Further CAIP-10 payout accounts, if any |
+
+**What the server adds** to its x402 route config:
+
+```ts
+extensions: {
+  "payee-name": { info: { name: "myagent.402bot.eth" } },
+},
+```
+
+**Checking it from code or an agent:**
+
+| Package | Use |
+|---------|-----|
+| [`@x402identity/payee`](https://www.npmjs.com/package/@x402identity/payee) | `verifyPayee(paymentRequired, origin, reader)`: one verdict per payment option, `true` / `false` / `"inconclusive"` with a reason |
+| [`@x402identity/mcp`](https://www.npmjs.com/package/@x402identity/mcp) | `verify_payee` tool: give it a URL, it reads the 402 and verifies it |
+| [`@x402identity/widget-core`](https://www.npmjs.com/package/@x402identity/widget-core) | `planPayeeRecords` / `buildPayeeCalls`: the record writes the wizard uses |
+
+A failed chain read is always `inconclusive`, never a refusal. Expiry is checked on chain time, because an expired ENS name keeps resolving.
+
+**Spec and status:** the draft is [`specs/extensions/payee-name.md`](specs/extensions/payee-name.md), proposed to the x402 Foundation in [wg-identity#36](https://github.com/x402-foundation/wg-identity/issues/36) and [x402#3755](https://github.com/x402-foundation/x402/issues/3755). Live reference: the availability worker's 402 declares `test.402api.eth` and verifies as `payee-bound` on mainnet.
 
 ---
 
@@ -194,6 +246,7 @@ It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`]
 | Web3 | wagmi v2 · viem v2 · WalletConnect |
 | Styling | Tailwind CSS · Framer Motion |
 | Agent interface | Model Context Protocol SDK · zod |
+| Workers | Cloudflare Workers · Hono · `@x402/hono` |
 | Hosting | IPFS (Pinata) · ENS contenthash |
 
 ---
@@ -280,7 +333,8 @@ x402-identity-hub/
 │   ├── widget-core/               # Framework-agnostic viem helpers
 │   ├── widget-react/              # <X402Widget> React component
 │   ├── embed/                     # Script-tag loader — source of truth for public/embed.js
-│   └── mcp-server/                # @x402identity/mcp (MCP server)
+│   ├── mcp-server/                # @x402identity/mcp (MCP server)
+│   └── payee/                     # @x402identity/payee (payee-name verifier)
 ├── scripts/
 │   ├── deploy-viem.mjs            # Mainnet deploy script (viem)
 │   ├── setup-viem.mjs             # NameWrapper approval + parent setup
@@ -289,6 +343,7 @@ x402-identity-hub/
 │   ├── app/
 │   │   ├── layout.tsx             # Root layout + providers
 │   │   ├── page.tsx               # Home page
+│   │   ├── verify/                # Verified Payee wizard
 │   │   └── globals.css            # Global styles
 │   ├── components/
 │   │   ├── MintForm.tsx           # Main mint UI (single + batch)
@@ -302,8 +357,10 @@ x402-identity-hub/
 │       ├── contracts.ts           # Contract addresses + ABI
 │       ├── token.ts               # $X402ID constants + swap API URL
 │       └── parents.ts             # Parent node configs (namehashes)
+├── specs/
+│   └── extensions/payee-name.md   # Draft x402 extension (proposed upstream)
 ├── workers/
-│   ├── availability/              # Paid x402 name check, listed on agentic.market
+│   ├── availability/              # Paid x402 name check + free /v1/challenge reader
 │   └── swap/                      # Cloudflare Worker proxying the 0x Swap API
 ├── hardhat.config.js
 ├── next.config.mjs
