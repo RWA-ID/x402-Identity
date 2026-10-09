@@ -6,7 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,   // next/image needs this for static export
   },
-  transpilePackages: ["@x402identity/widget-core", "@x402identity/widget-react"],
+  transpilePackages: ["@x402identity/widget-core", "@x402identity/widget-react", "@x402identity/payee"],
   webpack: (config) => {
     const originalExternals = Array.isArray(config.externals) ? config.externals : [];
     config.externals = [

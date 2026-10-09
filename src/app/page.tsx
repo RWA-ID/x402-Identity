@@ -148,6 +148,7 @@ export default function Home() {
             <a href="#permanence">Permanence</a>
             <a href="#developers">Developers</a>
             <a href="/integrate/">Integrate</a>
+            <a href="/verify/">Verify</a>
           </nav>
           <NavConnect onMint={() => openDrawer()} />
         </div>

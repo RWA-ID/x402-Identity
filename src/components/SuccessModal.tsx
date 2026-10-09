@@ -81,7 +81,10 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
         {link.state === "linked" ? (
           <p className="success-sub" style={{ color: "var(--accent)" }}>
             {names.length === 1 ? "It now resolves" : "They now resolve"} to{" "}
-            {link.address?.slice(0, 6)}…{link.address?.slice(-4)} on Ethereum and Base.
+            {link.address?.slice(0, 6)}…{link.address?.slice(-4)} on Ethereum and Base.{" "}
+            <a href={`/verify/?name=${encodeURIComponent(names.join(","))}`} style={{ textDecoration: "underline" }}>
+              Running an x402 endpoint? Make {names.length === 1 ? "it" : "them"} a verified payee →
+            </a>
           </p>
         ) : (
           <>
