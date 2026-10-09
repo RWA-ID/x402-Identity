@@ -1,6 +1,6 @@
 # @x402identity/payee
 
-Reference verifier for the x402 [`payee-name` extension](../../specs/extensions/payee-name.md) (draft). An ENS name binds the origin a client contacted to the `payTo` addresses in a 402 challenge, and the binding is signed by the name's owner on Ethereum.
+Reference verifier for the x402 [`payee-name` extension](https://github.com/RWA-ID/x402-Identity/blob/main/specs/extensions/payee-name.md) (draft). An ENS name binds the origin a client contacted to the `payTo` addresses in a 402 challenge, and the binding is signed by the name's owner on Ethereum.
 
 ```ts
 import { createPublicClient, http } from "viem";

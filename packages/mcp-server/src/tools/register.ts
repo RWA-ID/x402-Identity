@@ -93,10 +93,11 @@ export function registerRegisterTools(server: McpServer, ctx: Ctx) {
     "register_subname",
     {
       description:
-        "Mint a permanent ENS subname under 402bot.eth, 402api.eth, or 402mcp.eth. " +
+        "Mint an ENS subname under 402bot.eth, 402api.eth, or 402mcp.eth. " +
         "If a signing key is configured the transaction is sent on-chain and the tool " +
         "returns the receipt; otherwise it returns a fully-encoded transaction " +
-        "(to, data, value) for the caller to sign. Names never expire.",
+        "(to, data, value) for the caller to sign. The parent cannot revoke the name; " +
+        "its expiry follows the parent's, which the x402 treasury renews at no cost to holders.",
       inputSchema: {
         label: z.string().describe("Subname label, e.g. 'myagent'"),
         parent: z.enum(PARENTS).describe("Parent name to mint under"),
