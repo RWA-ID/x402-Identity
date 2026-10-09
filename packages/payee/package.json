@@ -1,0 +1,35 @@
+{
+  "name": "@x402identity/payee",
+  "version": "0.1.0",
+  "description": "Verify the x402 payee-name extension: an ENS name binds the origin and payTo of a 402 challenge.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  },
+  "files": ["dist", "src", "README.md"],
+  "keywords": ["x402", "ens", "payee", "ai-agents", "payments"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RWA-ID/x402-Identity.git",
+    "directory": "packages/payee"
+  },
+  "homepage": "https://x402id.eth.link"
+}
