@@ -73,17 +73,22 @@ async function readCappedJson(res: Response): Promise<Challenge | null> {
 
 const str = (v: unknown) => (typeof v === "string" ? v : undefined);
 
-export async function readChallenge(url: URL, method: string) {
+/**
+ * `fetcher` defaults to the network. index.ts passes the app itself for this
+ * worker's own hostnames: Cloudflare won't let a worker fetch itself (522 on a
+ * custom domain, 404 on workers.dev).
+ */
+export async function readChallenge(url: URL, method: string, fetcher: (req: Request) => Promise<Response> = fetch) {
   let res: Response;
   try {
     // Redirects are not followed: the origin that answers is the one a payee
     // name must list, so the caller should check the final URL itself.
-    res = await fetch(url.href, {
+    res = await fetcher(new Request(url.href, {
       method,
       redirect: "manual",
       headers: { "user-agent": "x402id-verify/1 (+https://x402id.eth.limo/verify/)" },
       signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    }));
   } catch (e) {
     return { ok: false as const, status: 502, error: `Could not reach ${url.origin}: ${(e as Error).message}` };
   }

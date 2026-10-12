@@ -86,6 +86,27 @@ function reasonText(v: PayeeVerdict): string {
   }
 }
 
+/** A URL with no path is a host, and a host's root is rarely the paid route. */
+function bareHost(url: string): string | null {
+  try {
+    const u = new URL(url.trim());
+    return u.pathname === "/" && !u.search ? u.origin : null;
+  } catch {
+    return null;
+  }
+}
+
+function BareHostNote({ url }: { url: string }) {
+  const host = bareHost(url);
+  if (!host) return null;
+  return (
+    <p className="verify-note">
+      That&rsquo;s only the host. Paste a paid route on it, like <span className="mono">{host}/v1/route</span>: a
+      host&rsquo;s root usually isn&rsquo;t paywalled.
+    </p>
+  );
+}
+
 export default function VerifyClient() {
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
@@ -355,6 +376,7 @@ extensions: {
                       </button>
                     </div>
                     {e.error && <p className="verify-error">{e.error}</p>}
+                    {!c && <BareHostNote url={e.url} />}
                     {c?.redirect && <p className="verify-error">This URL redirects to {c.redirect}. Paste the final URL.</p>}
                     {c && !c.redirect && unreadable && (
                       <div className="verify-manual">
@@ -534,6 +556,7 @@ extensions: {
                         onKeyDown={(ev) => ev.key === "Enter" && originOf(ep(name).url) && verify(name)}
                       />
                     </div>
+                    <BareHostNote url={ep(name).url} />
                     <div className="verify-actions">
                       <button className="btn btn-primary" onClick={() => verify(name)} disabled={check?.running || !originOf(ep(name).url)}>
                         {check?.running ? "Checking…" : check ? "Verify again" : "Verify"}

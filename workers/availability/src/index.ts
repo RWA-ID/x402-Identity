@@ -50,6 +50,8 @@ const ROUTE = "/v1/availability/:name";
 // Its records: org.x402.origins = this worker's origin, Base address = PAY_TO.
 // Change either here and the records must change with it.
 const PAYEE_NAME = "test.402api.eth";
+// Hostnames bound to this worker (wrangler.jsonc).
+const SELF_HOSTS = ["api.x402id.dev", "x402id-availability.dmpay.workers.dev"];
 
 const registrarAbi = [
   {
@@ -202,7 +204,9 @@ app.get("/v1/challenge", async (c) => {
   if (typeof target === "string") return c.json({ error: target }, 400);
   const method = (c.req.query("method") ?? "GET").toUpperCase();
   if (!["GET", "POST", "HEAD"].includes(method)) return c.json({ error: "method must be GET, POST or HEAD" }, 400);
-  const result = await readChallenge(target, method);
+  // This worker's own hostnames are answered in-process; see readChallenge.
+  const self = target.hostname === new URL(c.req.url).hostname || SELF_HOSTS.includes(target.hostname);
+  const result = await readChallenge(target, method, self ? (req) => Promise.resolve(app.fetch(req, c.env, c.executionCtx)) : undefined);
   return result.ok ? c.json(result.body) : c.json({ error: result.error }, result.status as 502);
 });
 
