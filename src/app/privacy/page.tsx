@@ -4,11 +4,11 @@ import { SiteNav } from "@/components/SiteNav";
 export const metadata = pageMetadata({
   title: "Privacy Policy — x402 Identity Hub",
   description:
-    "How x402 Identity Hub handles data: a fully client-side, IPFS-hosted dapp with no accounts, no cookies, and no analytics.",
+    "How x402 Identity Hub handles data: a client-side dapp with no accounts, served from Cloudflare and IPFS, using Google Analytics for aggregate traffic statistics.",
   path: "/privacy/",
 });
 
-const UPDATED = "July 14, 2026";
+const UPDATED = "October 12, 2026";
 
 export default function PrivacyPage() {
   return (
@@ -29,14 +29,16 @@ export default function PrivacyPage() {
             x402 Identity Hub (&ldquo;the Hub,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) is an open-source, fully
             client-side web application for minting ENS subnames under <span className="mono">402bot.eth</span>,{" "}
             <span className="mono">402api.eth</span>, and <span className="mono">402mcp.eth</span>. The interface is
-            static and hosted on IPFS. We do not operate a backend server that receives, stores, or profiles your
-            personal information.
+            static and served from Cloudflare at <span className="mono">x402id.dev</span> and from IPFS at{" "}
+            <span className="mono">x402id.eth</span>. We do not operate a backend server that receives, stores, or
+            profiles your personal information.
           </p>
 
           <h2>1. Information we do not collect</h2>
           <p>
-            We do not run accounts, logins, email lists, cookies, analytics, advertising pixels, or third-party
-            trackers. The Hub does not ask you for your name, email address, or any personally identifying details.
+            We do not run accounts, logins, email lists, or advertising pixels. The Hub does not ask you for your
+            name, email address, or any personally identifying details. The only analytics we use is Google Analytics,
+            described in section 5.
           </p>
 
           <h2>2. Information handled in your browser</h2>
@@ -61,7 +63,10 @@ export default function PrivacyPage() {
               transactions you sign.
             </li>
             <li>
-              <strong>IPFS gateways</strong> — serve the static files that make up this interface.
+              <strong>Cloudflare and IPFS gateways</strong> — serve the static files that make up this interface.
+            </li>
+            <li>
+              <strong>Google Analytics</strong> — measures aggregate site traffic (see section 5).
             </li>
           </ul>
           <p>
@@ -77,10 +82,24 @@ export default function PrivacyPage() {
             or set records you are unwilling to make public forever.
           </p>
 
-          <h2>5. Search engine verification</h2>
+          <h2>5. Analytics and search engine verification</h2>
           <p>
-            The site includes a Google Search Console verification tag so the domain owner can monitor indexing. This
-            is a verification signal only and does not load analytics or track visitors.
+            The site uses Google Analytics to understand aggregate traffic: which pages are visited, how visitors
+            arrive, and their approximate region and device type. Google Analytics sets first-party cookies and
+            processes your IP address under{" "}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
+              Google&rsquo;s privacy policy
+            </a>
+            . We do not send your wallet address or any onchain activity to Google Analytics. You can opt out with
+            Google&rsquo;s{" "}
+            <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">
+              opt-out browser add-on
+            </a>{" "}
+            or by blocking cookies for this site.
+          </p>
+          <p>
+            The site also includes Google Search Console verification tags so the domain owner can monitor indexing.
+            These are verification signals only.
           </p>
 
           <h2>6. Children</h2>
@@ -91,7 +110,7 @@ export default function PrivacyPage() {
           <h2>7. Changes to this policy</h2>
           <p>
             We may update this policy as the Hub evolves. Changes are published at this URL with a revised
-            &ldquo;last updated&rdquo; date. Because the interface is served from IPFS, prior versions may remain
+            &ldquo;last updated&rdquo; date. Because the interface is also served from IPFS, prior versions may remain
             accessible at older content hashes.
           </p>
 

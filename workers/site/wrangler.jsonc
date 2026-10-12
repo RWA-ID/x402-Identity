@@ -1,0 +1,22 @@
+{
+  "name": "x402id-site",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  // The site is the Next static export at the repo root (npm run build → out/).
+  // The same out/ is pinned to IPFS for x402id.eth; this worker is the web2 copy.
+  "assets": {
+    "directory": "../../out",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    // Run the worker first so the alias hosts below redirect instead of serving a copy.
+    "run_worker_first": true
+  },
+  "routes": [
+    { "pattern": "x402id.dev", "custom_domain": true },
+    { "pattern": "www.x402id.dev", "custom_domain": true },
+    { "pattern": "402id.dev", "custom_domain": true },
+    { "pattern": "www.402id.dev", "custom_domain": true }
+  ],
+  "workers_dev": true
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-export const SITE = "https://x402id.eth.link";
+// Canonical web2 domain. The same build is also pinned to IPFS and served at x402id.eth.limo.
+export const SITE = "https://x402id.dev";
 
 export const OG_ALT =
   "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";

@@ -4,7 +4,7 @@
 
 Mint subnames under `402bot.eth`, `402api.eth`, or `402mcp.eth` for 0.0015 ETH each. No renewals for holders, no middlemen, and the parent can't take the name back. Parent names are renewed from [$X402ID](#x402id-token) trading fees.
 
-🌐 **Live:** [x402id.eth.link](https://x402id.eth.link)
+🌐 **Live:** [x402id.dev](https://x402id.dev) · IPFS mirror: [x402id.eth.limo](https://x402id.eth.limo)
 🐦 **Twitter/X:** [@x402identity](https://twitter.com/x402identity)
 
 ---
@@ -21,7 +21,7 @@ x402 Identity Hub gives AI agents a verifiable onchain identity through the ENS 
 | `[name].402api.eth` | API-facing agents and services |
 | `[name].402mcp.eth` | MCP (Model Context Protocol) servers |
 
-A name can also prove who gets paid: link it to your x402 endpoint at [x402id.eth.limo/verify](https://x402id.eth.limo/verify/) and clients can check that the payout address in your 402 belongs to you. See [Verified Payee](#verified-payee-payee-name).
+A name can also prove who gets paid: link it to your x402 endpoint at [x402id.dev/verify](https://x402id.dev/verify/) and clients can check that the payout address in your 402 belongs to you. See [Verified Payee](#verified-payee-payee-name).
 
 ---
 
@@ -53,7 +53,7 @@ The registrar interacts directly with the ENS **NameWrapper** contract to issue 
 
 External platforms can earn from registrations by mounting the x402id widget and setting their own platform fee — paid atomically to a treasury address they specify. The forwarder enforces a 0.05 ETH cap on platform fees and the breakdown is shown to users line-by-line before they sign.
 
-**Full integration guide:** [x402id.eth.link/integrate](https://x402id.eth.link/integrate)
+**Full integration guide:** [x402id.dev/integrate](https://x402id.dev/integrate/)
 
 ### Option 1 — drop-in for any site
 
@@ -66,7 +66,7 @@ External platforms can earn from registrations by mounting the x402id widget and
 <script src="https://x402id.eth.link/embed.js" async></script>
 ```
 
-`data-theme` takes `light`, `dark`, `lime`, `orange`, or `purple`. Try them at [/widget-demo](https://x402id.eth.link/widget-demo/).
+`data-theme` takes `light`, `dark`, `lime`, `orange`, or `purple`. Try them at [/widget-demo](https://x402id.dev/widget-demo/).
 
 ### Option 2 — React / Next.js
 
@@ -181,7 +181,8 @@ Like the widget, anyone can run this server with a treasury configured and earn 
 x402 Identity Hub is listed on [agentic.market](https://agentic.market/services/x402id-availability-dmpay-workers-dev) through the x402 Bazaar, as a paid name-availability check:
 
 ```
-GET https://x402id-availability.dmpay.workers.dev/v1/availability/:name    # e.g. mybot.402bot.eth
+GET https://api.x402id.dev/v1/availability/:name                          # e.g. mybot.402bot.eth
+GET https://x402id-availability.dmpay.workers.dev/v1/availability/:name    # same worker, original URL (kept)
 ```
 
 It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C), and returns `available`, the live mint fee and a link to register here. It's there for discovery: someone browsing the marketplace asks their agent to check a name, and the answer sends them to the site. A malformed name or a failed chain read is never charged.
@@ -201,7 +202,7 @@ Its 402 declares `payee-name: test.402api.eth`, the live reference instance for 
 
 A client paying an x402 endpoint can't tell who the `payTo` address belongs to. `payee-name` fixes that with an ENS name: the 402 declares the name, and the name's owner lists the origins and payout addresses it authorizes. Those records are set by the owner's key on Ethereum, so the check needs no DNS. It works for a seller on `*.workers.dev` or `*.vercel.app` who controls no domain.
 
-**Set it up:** [x402id.eth.limo/verify](https://x402id.eth.limo/verify/) runs a three-step wizard.
+**Set it up:** [x402id.dev/verify](https://x402id.dev/verify/) runs a three-step wizard.
 
 1. **Choose names**: the x402 names your wallet holds now.
 2. **Link endpoints**: paste a paid route. The page reads its 402 and fills in the origin and payout addresses, shows the current and new records side by side, and writes them in one signature.
@@ -253,12 +254,17 @@ A failed chain read is always `inconclusive`, never a refusal. Expiry is checked
 
 ## Hosting
 
-The frontend is a static export (`next build` → `out/`) pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
+The frontend is a static export (`next build` → `out/`), deployed twice from the same build:
 
-**IPFS CID:** `bafybeigiuwqhk6y6tpicgz6kvq4kz6rjv46mdjfdzh7uozw552fhy262jq`
+- **[x402id.dev](https://x402id.dev)**: the `x402id-site` Cloudflare Worker (`workers/site/`, `npx wrangler deploy`). `www.x402id.dev`, `402id.dev` and `www.402id.dev` 301 to it.
+- **[x402id.eth.limo](https://x402id.eth.limo)**: pinned to IPFS and served via the `x402id.eth` ENS contenthash. No centralized server required.
+
+The workers keep their `*.workers.dev` URLs alongside `api.x402id.dev` and `swap.x402id.dev`; those URLs are cataloged elsewhere and must never be retired.
+
+**IPFS CID:** `bafybeiehmjdmcrriokbfcu7uomygawun6zm2xbz6zzsvny5ukubt7hwxue`
 
 ```
-https://ipfs.io/ipfs/bafybeigiuwqhk6y6tpicgz6kvq4kz6rjv46mdjfdzh7uozw552fhy262jq/
+https://ipfs.io/ipfs/bafybeiehmjdmcrriokbfcu7uomygawun6zm2xbz6zzsvny5ukubt7hwxue/
 ```
 
 ---

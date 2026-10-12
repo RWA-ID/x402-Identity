@@ -42,7 +42,7 @@ const BASE = "eip155:8453" as const;
 const BASE_SEPOLIA = "eip155:84532" as const;
 const PRICE = "$0.001";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
-const SITE = "https://x402id.eth.limo/";
+const SITE = "https://x402id.dev/";
 const ICON = "https://x402id.eth.limo/favicon-512.png";
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"] as const;
 const ROUTE = "/v1/availability/:name";
@@ -95,7 +95,7 @@ const outputExample = {
   available: true,
   mintFee: { wei: "1500000000000000", eth: "0.0015" },
   registerUrl: SITE,
-  message: "mybot.402bot.eth is available. Register it at https://x402id.eth.limo/ for 0.0015 ETH plus gas (Ethereum mainnet).",
+  message: "mybot.402bot.eth is available. Register it at https://x402id.dev/ for 0.0015 ETH plus gas (Ethereum mainnet).",
 };
 
 function routes(network: typeof BASE | typeof BASE_SEPOLIA): RoutesConfig {

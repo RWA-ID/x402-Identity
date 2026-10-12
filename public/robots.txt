@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://x402id.eth.link/sitemap.xml
+Sitemap: https://x402id.dev/sitemap.xml

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Script from "next/script";
 import { Providers } from "./providers";
+import { SITE } from "@/lib/seo";
 
-const SITE = "https://x402id.eth.link";
+const GA_ID = "G-WYTL4XKH0W";
 const OG_ALT =
   "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";
 
@@ -55,7 +57,10 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
-  verification: { google: "OtVg0C9NspzC28KBeFogk7gNEoAaVdJrJiPxoa7JuxY" },
+  // Search Console: the first token verifies the original property, the second x402id.dev.
+  verification: {
+    google: ["OtVg0C9NspzC28KBeFogk7gNEoAaVdJrJiPxoa7JuxY", "ZwguCvAaW0znvfe7HvVlAme7rj_wzU0QAGcaZ6GKCEY"],
+  },
 };
 
 export const viewport: Viewport = {
@@ -67,6 +72,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased">
         <Providers>{children}</Providers>
+        {/* Google Analytics (gtag.js). Disclosed on /privacy. */}
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`}
+        </Script>
       </body>
     </html>
   );

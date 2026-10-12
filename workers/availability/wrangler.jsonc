@@ -4,7 +4,11 @@
   "compatibility_date": "2026-09-01",
   // @coinbase/x402 reads process.env and signs CDP JWTs with node crypto.
   "compatibility_flags": ["nodejs_compat"],
+  // KEEP workers_dev true. The workers.dev URL is cataloged in Bazaar/agentic.market,
+  // listed in ERC-8004 agent 8453:98739 and in test.402api.eth's org.x402.origins.
+  // api.x402id.dev is an ADDED hostname, never a replacement.
   "workers_dev": true,
+  "routes": [{ "pattern": "api.x402id.dev", "custom_domain": true }],
   // 30 /v1/challenge reads per minute per IP.
   "ratelimits": [
     { "name": "CHALLENGE_LIMITER", "namespace_id": "4021", "simple": { "limit": 30, "period": 60 } }
