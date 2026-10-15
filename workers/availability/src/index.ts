@@ -22,6 +22,7 @@ import { mainnet } from "viem/chains";
 // on-chain agentURI points at (ipfs://bafkreifp7y…5oua). Update both together.
 import agentRegistration from "./agent-registration.json";
 import { checkTarget, readChallenge } from "./challenge.js";
+import { x402Manifest } from "./well-known.js";
 
 type Env = {
   CDP_API_KEY_ID: string;
@@ -46,6 +47,10 @@ const SITE = "https://x402id.dev/";
 const ICON = "https://x402id.eth.limo/favicon-512.png";
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"] as const;
 const ROUTE = "/v1/availability/:name";
+// A concrete URL for ROUTE, for /.well-known/x402 (indexers probe it for the 402).
+const EXAMPLE_PATH = "/v1/availability/mybot.402bot.eth";
+// What createFacilitatorConfig points at (@coinbase/x402).
+const CDP_FACILITATOR = "https://api.cdp.coinbase.com/platform/v2/x402";
 // ENS name that authorizes this origin and PAY_TO (specs/extensions/payee-name.md).
 // Its records: org.x402.origins = this worker's origin, Base address = PAY_TO.
 // Change either here and the records must change with it.
@@ -184,7 +189,7 @@ app.get("/", (c) =>
     description: "ENS identity names for AI agents, APIs and MCP servers: *.402bot.eth, *.402api.eth, *.402mcp.eth.",
     endpoint: `GET ${ROUTE}`,
     price: `${PRICE} USDC on Base (x402)`,
-    example: `${c.env.PUBLIC_URL.replace(/\/$/, "")}/v1/availability/mybot.402bot.eth`,
+    example: `${c.env.PUBLIC_URL.replace(/\/$/, "")}${EXAMPLE_PATH}`,
     registerUrl: SITE,
   }),
 );
@@ -192,6 +197,22 @@ app.get("/", (c) =>
 // Free — ERC-8004 endpoint-domain proof. 8004scan verifies this domain belongs
 // to the agent when the file's `registrations` matches it on-chain.
 app.get("/.well-known/agent-registration.json", (c) => c.json(agentRegistration));
+
+// Free — x402 host manifest (x402#2979), served from whichever bound hostname
+// was asked, since its resource URLs must be on that origin. test.402api.eth's
+// org.x402.origins lists both hostnames, so the payee pointer holds on either.
+app.get("/.well-known/x402", (c) => {
+  const test = c.env.TEST_FACILITATOR_URL;
+  const manifest = x402Manifest({
+    origin: new URL(c.req.url).origin,
+    facilitator: test ?? CDP_FACILITATOR,
+    resources: [{ path: EXAMPLE_PATH, method: "GET" }],
+    // Same rule as the 402: the name lists no Base Sepolia address.
+    payeeName: test ? undefined : PAYEE_NAME,
+  });
+  c.header("Cache-Control", "public, max-age=300");
+  return c.json(manifest);
+});
 
 // Free — reads another endpoint's 402 terms for the site's /verify/ page,
 // which usually can't read them cross-origin. Outside the paywall.

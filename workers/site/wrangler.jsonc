@@ -12,6 +12,8 @@
     // Run the worker first so the alias hosts below redirect instead of serving a copy.
     "run_worker_first": true
   },
+  // /.well-known/x402 is answered by the API worker (workers/availability).
+  "services": [{ "binding": "API", "service": "x402id-availability" }],
   "routes": [
     { "pattern": "x402id.dev", "custom_domain": true },
     { "pattern": "www.x402id.dev", "custom_domain": true },
