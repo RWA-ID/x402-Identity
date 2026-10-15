@@ -90,7 +90,8 @@ export default function PrivacyPage() {
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
               Google&rsquo;s privacy policy
             </a>
-            . We do not send your wallet address or any onchain activity to Google Analytics. You can opt out with
+            . We do not send your wallet address or any onchain activity to Google Analytics. The embeddable mint
+            widget that partners place on their own sites does not load Google Analytics. You can opt out with
             Google&rsquo;s{" "}
             <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">
               opt-out browser add-on

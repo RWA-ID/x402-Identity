@@ -666,6 +666,9 @@ footer {
 }
 .input-row .add-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .input-row .add-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* The primary action in a row, e.g. /verify/'s "Find routes" for a bare host. */
+.input-row .add-btn.is-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.input-row .add-btn.is-primary:hover:not(:disabled) { background: var(--accent-ink); border-color: var(--accent-ink); color: #fff; }
 .avail {
   display: flex; align-items: center; gap: 8px;
   margin-top: 8px;
@@ -1183,6 +1186,7 @@ html:not([data-theme="dark"]) .arch-box::before {
 .verify-results li[data-verdict="true"] { border-left-color: #1F8A5B; }
 .verify-results li[data-verdict="false"] { border-left-color: #B0413E; }
 .verify-results li[data-verdict="inconclusive"] { border-left-color: #C9A227; }
+.verify-origins .verify-use { flex: none; height: 30px; padding: 0 12px; font-size: 12px; }
 
 @media (max-width: 640px) {
   .verify-hero { padding: 56px 0 32px; }

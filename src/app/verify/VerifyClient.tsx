@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAccount, usePublicClient } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { useAppKit } from "@reown/appkit/react";
@@ -102,18 +102,39 @@ function bareHost(url: string): string | null {
 }
 
 /**
- * For a host-only URL: offer to read the host's /.well-known/x402 and pick one
- * of the paid routes it lists. Falls back to asking for a route by hand.
+ * The button beside a URL input. A host-only URL turns it into a blue
+ * "Find routes", which reads the host's /.well-known/x402; Enter does the same.
  */
-function HostRoutes({
+function UrlButton({
   url,
   lookup,
   onFind,
-  onPick,
+  idle,
 }: {
   url: string;
   lookup: HostLookup | undefined;
   onFind: () => void;
+  /** The usual button, shown for a full route URL. */
+  idle: ReactNode;
+}) {
+  const host = bareHost(url);
+  if (!host) return <>{idle}</>;
+  const reading = lookup?.host === host && lookup.reading;
+  return (
+    <button className="add-btn is-primary" onClick={onFind} disabled={reading}>
+      {reading ? "Finding…" : "Find routes"}
+    </button>
+  );
+}
+
+/** For a host-only URL: the paid routes its /.well-known/x402 lists, to pick one. */
+function HostRoutes({
+  url,
+  lookup,
+  onPick,
+}: {
+  url: string;
+  lookup: HostLookup | undefined;
   onPick: (route: string) => void;
 }) {
   const host = bareHost(url);
@@ -123,16 +144,12 @@ function HostRoutes({
   const routes = m?.found ? (m.resources ?? []) : [];
   return (
     <div className="verify-manual">
-      <p className="verify-note">
-        That&rsquo;s only the host. Paste a paid route on it, like <span className="mono">{host}/v1/route</span>, or
-        find the routes it lists in <span className="mono">/.well-known/x402</span>.
-      </p>
-      {!m && (
-        <div className="verify-actions" style={{ marginTop: 10 }}>
-          <button className="add-btn" onClick={onFind} disabled={l?.reading}>
-            {l?.reading ? "Reading…" : "Find routes"}
-          </button>
-        </div>
+      {!m && !l?.error && (
+        <p className="verify-note">
+          That&rsquo;s a host. Press <b>Find routes</b> to list the paid routes it publishes in{" "}
+          <span className="mono">/.well-known/x402</span>, or paste a route like{" "}
+          <span className="mono">{host}/v1/route</span>.
+        </p>
       )}
       {l?.error && <p className="verify-error">{l.error}</p>}
       {m && !m.found && (
@@ -147,15 +164,17 @@ function HostRoutes({
       )}
       {routes.length > 0 && (
         <div className="verify-origins">
-          <p className="verify-note">Its manifest lists {routes.length === 1 ? "this route" : "these routes"}:</p>
+          <p className="verify-note">
+            {host} lists {routes.length === 1 ? "this paid route" : `${routes.length} paid routes`}. Pick the one to link:
+          </p>
           <ul>
             {routes.map((r) => (
               <li key={`${r.method} ${r.url}`}>
                 <span className="mono">
                   {r.method} {r.url}
                 </span>
-                <button className="success-link" onClick={() => onPick(r.url)}>
-                  Use
+                <button className="btn btn-primary verify-use" onClick={() => onPick(r.url)}>
+                  Use this route
                 </button>
               </li>
             ))}
@@ -443,7 +462,7 @@ extensions: {
               <h2>Link endpoints</h2>
               <p className="verify-note">
                 Paste one paid route per name. We read its 402 without paying and fill in the origin and payout
-                addresses for you.
+                addresses for you. Only know the host? Paste it and press <b>Find routes</b>.
               </p>
               {selected.map((name) => {
                 const e = ep(name);
@@ -460,19 +479,24 @@ extensions: {
                     <div className="input-row">
                       <input
                         className="label-input"
-                        placeholder="https://api.example.com/v1/route"
+                        placeholder="https://api.example.com/v1/route, or just the host"
                         value={e.url}
                         onChange={(ev) => patch(name, { url: ev.target.value, challenge: null, error: null })}
-                        onKeyDown={(ev) => ev.key === "Enter" && read(name)}
+                        onKeyDown={(ev) => ev.key === "Enter" && (bareHost(e.url) ? findRoutes(name) : read(name))}
                       />
-                      <button className="add-btn" onClick={() => read(name)} disabled={e.reading || !e.url.trim()}>
-                        {e.reading ? "Reading…" : "Read 402"}
-                      </button>
+                      <UrlButton
+                        url={e.url}
+                        lookup={lookups[name]}
+                        onFind={() => findRoutes(name)}
+                        idle={
+                          <button className="add-btn" onClick={() => read(name)} disabled={e.reading || !e.url.trim()}>
+                            {e.reading ? "Reading…" : "Read 402"}
+                          </button>
+                        }
+                      />
                     </div>
                     {e.error && <p className="verify-error">{e.error}</p>}
-                    {!c && (
-                      <HostRoutes url={e.url} lookup={lookups[name]} onFind={() => findRoutes(name)} onPick={(r) => read(name, r)} />
-                    )}
+                    {!c && <HostRoutes url={e.url} lookup={lookups[name]} onPick={(r) => read(name, r)} />}
                     {c?.redirect && <p className="verify-error">This URL redirects to {c.redirect}. Paste the final URL.</p>}
                     {c && !c.redirect && unreadable && (
                       <div className="verify-manual">
@@ -646,20 +670,19 @@ extensions: {
                     <div className="input-row">
                       <input
                         className="label-input"
-                        placeholder="https://api.example.com/v1/route"
+                        placeholder="https://api.example.com/v1/route, or just the host"
                         value={ep(name).url}
                         onChange={(ev) => patch(name, { url: ev.target.value })}
-                        onKeyDown={(ev) => ev.key === "Enter" && originOf(ep(name).url) && verify(name)}
+                        onKeyDown={(ev) =>
+                          ev.key === "Enter" &&
+                          (bareHost(ep(name).url) ? findRoutes(name) : originOf(ep(name).url) && verify(name))
+                        }
                       />
+                      <UrlButton url={ep(name).url} lookup={lookups[name]} onFind={() => findRoutes(name)} idle={null} />
                     </div>
-                    <HostRoutes
-                      url={ep(name).url}
-                      lookup={lookups[name]}
-                      onFind={() => findRoutes(name)}
-                      onPick={(r) => verify(name, r)}
-                    />
+                    <HostRoutes url={ep(name).url} lookup={lookups[name]} onPick={(r) => verify(name, r)} />
                     <div className="verify-actions">
-                      <button className="btn btn-primary" onClick={() => verify(name)} disabled={check?.running || !originOf(ep(name).url)}>
+                      <button className="btn btn-primary" onClick={() => verify(name)} disabled={check?.running || !originOf(ep(name).url) || !!bareHost(ep(name).url)}>
                         {check?.running ? "Checking…" : check ? "Verify again" : "Verify"}
                       </button>
                     </div>

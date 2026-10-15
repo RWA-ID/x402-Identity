@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Script from "next/script";
 import { Providers } from "./providers";
+import { Analytics } from "@/components/Analytics";
 import { SITE } from "@/lib/seo";
-
-const GA_ID = "G-WYTL4XKH0W";
 const OG_ALT =
   "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";
 
@@ -72,14 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased">
         <Providers>{children}</Providers>
-        {/* Google Analytics (gtag.js). Disclosed on /privacy. */}
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-        <Script id="gtag-init" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${GA_ID}');`}
-        </Script>
+        <Analytics />
       </body>
     </html>
   );
