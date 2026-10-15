@@ -192,7 +192,9 @@ Its 402 declares `payee-name: test.402api.eth`, the live reference instance for 
 | Route | Purpose |
 |-------|---------|
 | `GET /v1/challenge?url=…` | Reads another endpoint's 402 server-side and returns only its payment terms, for `/verify/` (most sellers don't expose `PAYMENT-REQUIRED` to browsers). https on public hostnames only, 30 reads/min per IP |
+| `GET /v1/manifest?url=…` | Reads a host's `/.well-known/x402` and returns only its listed routes (own host and subdomains) and `payee-name`, for `/verify/`. Same limits as `/v1/challenge` |
 | `GET /.well-known/agent-registration.json` | ERC-8004 registration file for agent `8453:98739` |
+| `GET /.well-known/x402` | x402 host manifest ([x402#2979](https://github.com/x402-foundation/x402/pull/2979) shape) listing the paid route, with an `extensions["payee-name"]` pointer. x402id.dev serves the same manifest via a service binding |
 
 **Source + deploy:** [`workers/availability/`](workers/availability)
 
@@ -261,10 +263,10 @@ The frontend is a static export (`next build` → `out/`), deployed twice from t
 
 The workers keep their `*.workers.dev` URLs alongside `api.x402id.dev` and `swap.x402id.dev`; those URLs are cataloged elsewhere and must never be retired.
 
-**IPFS CID:** `bafybeic3kltuk7fhciynwgjvmyomd2k6lrobefdspxpszlah7gidwovli4`
+**IPFS CID:** `bafybeihnyemmynyuazhzl4rgamnsmibmbfrhhygthgojx5jhruq24nj3mu`
 
 ```
-https://ipfs.io/ipfs/bafybeic3kltuk7fhciynwgjvmyomd2k6lrobefdspxpszlah7gidwovli4/
+https://ipfs.io/ipfs/bafybeihnyemmynyuazhzl4rgamnsmibmbfrhhygthgojx5jhruq24nj3mu/
 ```
 
 ---
@@ -366,7 +368,7 @@ x402-identity-hub/
 ├── specs/
 │   └── extensions/payee-name.md   # Draft x402 extension (proposed upstream)
 ├── workers/
-│   ├── availability/              # Paid x402 name check + free /v1/challenge reader
+│   ├── availability/              # Paid x402 name check + free /v1/challenge + /v1/manifest readers
 │   └── swap/                      # Cloudflare Worker proxying the 0x Swap API
 ├── hardhat.config.js
 ├── next.config.mjs

@@ -23,6 +23,7 @@ import { mainnet } from "viem/chains";
 import agentRegistration from "./agent-registration.json";
 import { checkTarget, readChallenge } from "./challenge.js";
 import { x402Manifest } from "./well-known.js";
+import { readManifest } from "./manifest.js";
 
 type Env = {
   CDP_API_KEY_ID: string;
@@ -228,6 +229,20 @@ app.get("/v1/challenge", async (c) => {
   // This worker's own hostnames are answered in-process; see readChallenge.
   const self = target.hostname === new URL(c.req.url).hostname || SELF_HOSTS.includes(target.hostname);
   const result = await readChallenge(target, method, self ? (req) => Promise.resolve(app.fetch(req, c.env, c.executionCtx)) : undefined);
+  return result.ok ? c.json(result.body) : c.json({ error: result.error }, result.status as 502);
+});
+
+// Free — reads a host's /.well-known/x402 for /verify/: the routes it lists and
+// its payee-name. Shares /v1/challenge's limit, guard and in-process self path.
+app.get("/v1/manifest", async (c) => {
+  const ip = c.req.header("cf-connecting-ip") ?? "unknown";
+  if (c.env.CHALLENGE_LIMITER && !(await c.env.CHALLENGE_LIMITER.limit({ key: ip })).success) {
+    return c.json({ error: "Too many checks — wait a minute and retry." }, 429);
+  }
+  const target = checkTarget(c.req.query("url"));
+  if (typeof target === "string") return c.json({ error: target }, 400);
+  const self = target.hostname === new URL(c.req.url).hostname || SELF_HOSTS.includes(target.hostname);
+  const result = await readManifest(target, self ? (req) => Promise.resolve(app.fetch(req, c.env, c.executionCtx)) : undefined);
   return result.ok ? c.json(result.body) : c.json({ error: result.error }, result.status as 502);
 });
 

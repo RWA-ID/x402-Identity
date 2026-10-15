@@ -11,7 +11,7 @@ import { verifyPayee, viemReader, type PayeeVerdict } from "@x402identity/payee"
 import { SiteNav } from "@/components/SiteNav";
 import { useOwnedNames, holdsName } from "@/hooks/useOwnedNames";
 import { useWritePayee } from "@/hooks/useWritePayee";
-import { readChallenge, networkLabel, shortAddr, type Challenge } from "@/lib/challenge";
+import { readChallenge, readManifest, networkLabel, shortAddr, type Challenge, type Manifest } from "@/lib/challenge";
 
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"];
 const STEPS = ["Choose names", "Link endpoints", "Verify"] as const;
@@ -40,7 +40,12 @@ type Check = {
   error: string | null;
   challenge: Challenge | null;
   verdicts: PayeeVerdict[] | null;
+  /** The answering host's /.well-known/x402. Optional, so a failed read is "failed", not an error. */
+  manifest?: Manifest | "failed";
 };
+
+/** A bare host's /.well-known/x402, read to list its paid routes. */
+type HostLookup = { host: string; reading: boolean; manifest: Manifest | null; error: string | null };
 
 /**
  * Records for one name. `keep` are origins the name already lists and the
@@ -96,15 +101,85 @@ function bareHost(url: string): string | null {
   }
 }
 
-function BareHostNote({ url }: { url: string }) {
+/**
+ * For a host-only URL: offer to read the host's /.well-known/x402 and pick one
+ * of the paid routes it lists. Falls back to asking for a route by hand.
+ */
+function HostRoutes({
+  url,
+  lookup,
+  onFind,
+  onPick,
+}: {
+  url: string;
+  lookup: HostLookup | undefined;
+  onFind: () => void;
+  onPick: (route: string) => void;
+}) {
   const host = bareHost(url);
   if (!host) return null;
+  const l = lookup?.host === host ? lookup : undefined;
+  const m = l?.manifest;
+  const routes = m?.found ? (m.resources ?? []) : [];
   return (
-    <p className="verify-note">
-      That&rsquo;s only the host. Paste a paid route on it, like <span className="mono">{host}/v1/route</span>: a
-      host&rsquo;s root usually isn&rsquo;t paywalled.
-    </p>
+    <div className="verify-manual">
+      <p className="verify-note">
+        That&rsquo;s only the host. Paste a paid route on it, like <span className="mono">{host}/v1/route</span>, or
+        find the routes it lists in <span className="mono">/.well-known/x402</span>.
+      </p>
+      {!m && (
+        <div className="verify-actions" style={{ marginTop: 10 }}>
+          <button className="add-btn" onClick={onFind} disabled={l?.reading}>
+            {l?.reading ? "Reading…" : "Find routes"}
+          </button>
+        </div>
+      )}
+      {l?.error && <p className="verify-error">{l.error}</p>}
+      {m && !m.found && (
+        <p className="verify-note">
+          {m.redirect
+            ? `${host}/.well-known/x402 redirects to ${m.redirect}. Paste a paid route instead.`
+            : `${host} serves no /.well-known/x402 manifest (${m.status}). Paste a paid route instead.`}
+        </p>
+      )}
+      {m?.found && routes.length === 0 && (
+        <p className="verify-note">Its manifest lists no paid routes on this host. Paste one instead.</p>
+      )}
+      {routes.length > 0 && (
+        <div className="verify-origins">
+          <p className="verify-note">Its manifest lists {routes.length === 1 ? "this route" : "these routes"}:</p>
+          <ul>
+            {routes.map((r) => (
+              <li key={`${r.method} ${r.url}`}>
+                <span className="mono">
+                  {r.method} {r.url}
+                </span>
+                <button className="success-link" onClick={() => onPick(r.url)}>
+                  Use
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
+}
+
+/** The step-3 row for the host's manifest. Informational: the live 402 decides. */
+function manifestRow(name: string, m: Manifest | "failed" | undefined): { verdict: string; text: string } | null {
+  if (!m) return null;
+  const add = `add "extensions": { "payee-name": { "info": { "name": "${name}" } } } to it`;
+  if (m === "failed") return { verdict: "inconclusive", text: "Couldn't read /.well-known/x402 just now. It's optional." };
+  if (!m.found) {
+    return {
+      verdict: "inconclusive",
+      text: "Optional: this host serves no /.well-known/x402 manifest. Crawlers find paid routes there; if you add one, " + add + ".",
+    };
+  }
+  if (m.payeeName === name) return { verdict: "true", text: "Your /.well-known/x402 declares this name too." };
+  if (m.payeeName) return { verdict: "false", text: `Your /.well-known/x402 declares ${m.payeeName}, not ${name}.` };
+  return { verdict: "inconclusive", text: `Optional: your /.well-known/x402 doesn't name a payee yet — ${add}.` };
 }
 
 export default function VerifyClient() {
@@ -124,6 +199,7 @@ export default function VerifyClient() {
   const [current, setCurrent] = useState<Record<string, Current | "failed">>({});
   const [checks, setChecks] = useState<Record<string, Check>>({});
   const [dropped, setDropped] = useState<Record<string, string[]>>({});
+  const [lookups, setLookups] = useState<Record<string, HostLookup>>({});
 
   // ?name=a.402bot.eth,b.402api.eth — the post-mint link preselects its names.
   useEffect(() => {
@@ -176,8 +252,21 @@ export default function VerifyClient() {
   const patch = (name: string, p: Partial<Endpoint>) =>
     setEndpoints((all) => ({ ...all, [name]: { ...(all[name] ?? emptyEndpoint()), ...p } }));
 
-  const read = async (name: string) => {
-    const url = ep(name).url.trim();
+  const findRoutes = async (name: string) => {
+    const host = bareHost(ep(name).url);
+    if (!host) return;
+    setLookups((l) => ({ ...l, [name]: { host, reading: true, manifest: null, error: null } }));
+    try {
+      const manifest = await readManifest(host);
+      setLookups((l) => ({ ...l, [name]: { host, reading: false, manifest, error: null } }));
+    } catch (e) {
+      setLookups((l) => ({ ...l, [name]: { host, reading: false, manifest: null, error: (e as Error).message } }));
+    }
+  };
+
+  const read = async (name: string, override?: string) => {
+    if (override !== undefined) patch(name, { url: override });
+    const url = (override ?? ep(name).url).trim();
     if (!originOf(url)) {
       patch(name, { error: "Enter the full https URL of a paid route.", challenge: null });
       return;
@@ -214,8 +303,9 @@ export default function VerifyClient() {
     address &&
     plans.some((p) => p.plan?.addrs.some((a) => getAddress(a.address) !== getAddress(address)));
 
-  const verify = async (name: string) => {
-    const url = ep(name).url.trim();
+  const verify = async (name: string, override?: string) => {
+    if (override !== undefined) patch(name, { url: override });
+    const url = (override ?? ep(name).url).trim();
     setChecks((c) => ({ ...c, [name]: { running: true, error: null, challenge: null, verdicts: null } }));
     try {
       if (!client) throw new Error("No Ethereum connection");
@@ -229,12 +319,16 @@ export default function VerifyClient() {
       }
       // Check the records against the live terms as if the server already
       // declared the name, so a correct setup shows before the redeploy.
-      const verdicts = await verifyPayee(
-        { accepts: challenge.accepts, extensions: { "payee-name": { info: { name } } } },
-        challenge.origin,
-        viemReader(client as unknown as PublicClient),
-      );
-      setChecks((c) => ({ ...c, [name]: { running: false, error: null, challenge, verdicts } }));
+      // The manifest is read alongside, on the origin that answered the 402.
+      const [verdicts, manifest] = await Promise.all([
+        verifyPayee(
+          { accepts: challenge.accepts, extensions: { "payee-name": { info: { name } } } },
+          challenge.origin,
+          viemReader(client as unknown as PublicClient),
+        ),
+        readManifest(challenge.origin).catch(() => "failed" as const),
+      ]);
+      setChecks((c) => ({ ...c, [name]: { running: false, error: null, challenge, verdicts, manifest } }));
     } catch (e) {
       setChecks((c) => ({ ...c, [name]: { running: false, error: (e as Error).message, challenge: null, verdicts: null } }));
     }
@@ -376,7 +470,9 @@ extensions: {
                       </button>
                     </div>
                     {e.error && <p className="verify-error">{e.error}</p>}
-                    {!c && <BareHostNote url={e.url} />}
+                    {!c && (
+                      <HostRoutes url={e.url} lookup={lookups[name]} onFind={() => findRoutes(name)} onPick={(r) => read(name, r)} />
+                    )}
                     {c?.redirect && <p className="verify-error">This URL redirects to {c.redirect}. Paste the final URL.</p>}
                     {c && !c.redirect && unreadable && (
                       <div className="verify-manual">
@@ -556,7 +652,12 @@ extensions: {
                         onKeyDown={(ev) => ev.key === "Enter" && originOf(ep(name).url) && verify(name)}
                       />
                     </div>
-                    <BareHostNote url={ep(name).url} />
+                    <HostRoutes
+                      url={ep(name).url}
+                      lookup={lookups[name]}
+                      onFind={() => findRoutes(name)}
+                      onPick={(r) => verify(name, r)}
+                    />
                     <div className="verify-actions">
                       <button className="btn btn-primary" onClick={() => verify(name)} disabled={check?.running || !originOf(ep(name).url)}>
                         {check?.running ? "Checking…" : check ? "Verify again" : "Verify"}
@@ -584,6 +685,15 @@ extensions: {
                                 : "Not yet — add the snippet above and redeploy."}
                           </span>
                         </li>
+                        {(() => {
+                          const row = manifestRow(name, check.manifest);
+                          return row ? (
+                            <li data-verdict={row.verdict}>
+                              <b>Host manifest · /.well-known/x402</b>
+                              <span>{row.text}</span>
+                            </li>
+                          ) : null;
+                        })()}
                       </ul>
                     )}
                   </div>

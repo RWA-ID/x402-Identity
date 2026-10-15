@@ -65,6 +65,31 @@ export async function readChallenge(url: string): Promise<Challenge> {
   return { ...(body as Challenge), accepts: acceptsOf(body.accepts), via: "worker" };
 }
 
+/** The same worker reads a host's /.well-known/x402 (x402#2979). */
+const MANIFEST_API = "https://x402id-availability.dmpay.workers.dev/v1/manifest";
+
+export type Manifest = {
+  /** The manifest URL: `<origin>/.well-known/x402`. */
+  url: string;
+  origin: string;
+  status: number;
+  /** false when the host serves no JSON manifest there. */
+  found: boolean;
+  redirect?: string | null;
+  /** Paid routes it lists, already limited to its own host and subdomains. */
+  resources?: { url: string; method: string }[];
+  offHostResources?: number;
+  payeeName?: string | null;
+};
+
+/** Read the manifest of the host behind `url`. Always via the worker: few hosts allow CORS on it. */
+export async function readManifest(url: string): Promise<Manifest> {
+  const res = await fetch(`${MANIFEST_API}?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(15000) });
+  const body = (await res.json()) as Partial<Manifest> & { error?: string };
+  if (!res.ok || body.error) throw new Error(body.error ?? `Manifest read failed (${res.status})`);
+  return body as Manifest;
+}
+
 const NETWORKS: Record<string, string> = {
   "eip155:1": "Ethereum",
   "eip155:8453": "Base",
