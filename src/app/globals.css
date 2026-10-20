@@ -89,8 +89,8 @@ section { padding: var(--section-py) 0; }
 
 /* The layout is sized in px and reads small on large desktop screens, so
    scale the site pages up there (the /widget iframe keeps its native size). */
-@media (min-width: 1440px) { .site { zoom: 1.125; } }
-@media (min-width: 1600px) { .site { zoom: 1.25; } }
+@media (min-width: 1440px) { .site { zoom: 1.125; --zoom: 1.125; } }
+@media (min-width: 1600px) { .site { zoom: 1.25; --zoom: 1.25; } }
 .section-divider { border-top: 1px solid var(--line); }
 
 /*-- Typography ---------------------------------------------------------*/
@@ -222,21 +222,58 @@ nav.links a:focus-visible {
 }
 
 /*-- Hero ---------------------------------------------------------*/
-.hero { padding: 120px 0 96px; }
-.hero h1 { max-width: 27ch; text-wrap: balance; }
+/* Fills the viewport below the 60px sticky nav. vh inside the zoomed .site is
+   scaled by the zoom, so divide it back out. */
+.hero {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: calc(100vh / var(--zoom, 1) - 60px);
+  padding: 0;
+}
+.hero-inner {
+  position: relative; z-index: 1;
+  width: 100%; flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-top: 112px; padding-bottom: 72px;
+}
+.hero-col { max-width: 720px; display: flex; flex-direction: column; align-items: flex-start; }
+.hero h1 { margin-top: 28px; font-size: clamp(44px, 6.4vw, 80px); text-wrap: balance; }
 .hero h1 .h1-sub { display: block; color: var(--muted); }
-.hero .lede { margin-top: 28px; }
+.hero .nowrap { white-space: nowrap; }
+.inline-x {
+  display: inline-block; width: 0.62em; height: 0.62em;
+  vertical-align: baseline; margin: 0 0.03em 0 0.02em; overflow: visible;
+}
+.hero .lede { margin-top: 28px; max-width: 52ch; }
+.hero .lede .mono { font-size: 0.92em; }
 .hero-ctas {
   margin-top: 40px;
   display: flex; flex-wrap: wrap; gap: 12px;
 }
+/* Ghost buttons stay solid over the background mark. */
+.hero .btn-ghost:not(:hover) { background: color-mix(in oklab, var(--bg-elev) 60%, transparent); }
 .hero-meta {
-  margin-top: 28px;
-  display: flex; flex-wrap: wrap; gap: 18px;
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  margin: 88px 0 0; max-width: 960px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  border-top: 1px solid var(--line-2);
+  font-family: var(--mono);
 }
-.hero-meta span { display: inline-flex; align-items: center; gap: 8px; }
-.hero-meta .sep { width: 1px; height: 12px; background: var(--line-2); }
+.hero-meta > div { padding: 18px 24px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.hero-meta dt { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+.hero-meta dd { margin: 0; font-size: 13px; color: var(--ink); }
+.hero-meta .m { color: var(--muted); }
+
+/* Giant cropped logo mark behind a hero (see components/HeroX.tsx). */
+:root { --bgx-1: #F1F2F1; --bgx-2: #E2E4E5; --bgx-3: #D9DCDF; --bgx-4: #EDEEEE; }
+html[data-theme="dark"] { --bgx-1: #15191E; --bgx-2: #1A1E24; --bgx-3: #1E2228; --bgx-4: #171B20; }
+.bg-x {
+  position: absolute; z-index: 0; pointer-events: none;
+  top: 50%; right: calc(-14vw / var(--zoom, 1)); transform: translateY(-52%);
+  width: min(78vw / var(--zoom, 1), 1100px); aspect-ratio: 1;
+}
+.bg-x svg { display: block; overflow: visible; }
+/* Below this width the mark sits behind the text: keep the diamond as faint as the arms. */
+@media (max-width: 1023px) { .bg-x polygon { opacity: 0.12; } }
 
 /*-- Three-namespace grid ---------------------------------------------------------*/
 .ns-grid {
@@ -1111,7 +1148,10 @@ html:not([data-theme="dark"]) .arch-box::before {
 .chain.at-mint { border-color: var(--accent); }
 
 /*-- Verified Payee (/verify/) ---------------------------------------------------------*/
-.verify-hero { padding: 88px 0 48px; }
+.verify-hero { padding: 88px 0 48px; position: relative; overflow: hidden; }
+.verify-hero > .wrap { position: relative; z-index: 1; }
+/* The wizard hero is short, so size the mark to its height rather than the viewport. */
+.verify-hero .bg-x { width: auto; height: 150%; right: calc(-4vw / var(--zoom, 1)); transform: translateY(-50%); }
 .verify-hero h1 { margin-top: 16px; max-width: 18ch; }
 .verify-hero .lede { margin-top: 24px; }
 .verify-body { padding: 48px 0 112px; }

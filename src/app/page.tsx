@@ -6,6 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { MintDrawer } from "@/components/MintDrawer";
 import { LiveMetrics } from "@/components/LiveMetrics";
 import { TokenSwap } from "@/components/TokenSwap";
+import { InlineX, BackgroundX } from "@/components/HeroX";
 import { TOKEN } from "@/lib/token";
 import { useParentExpiries, fmtMonthYear } from "@/hooks/useParentExpiries";
 import { useMintFee } from "@/hooks/useMintFee";
@@ -142,7 +143,7 @@ export default function Home() {
           </a>
           <nav className="links">
             <a href="#namespaces">Namespaces</a>
-            <a href="#verified-payee">Verify</a>
+            <a href="#verified-payee">Verify Payee</a>
             <a href="#token">Token</a>
             <a href="#developers">Developers</a>
           </nav>
@@ -152,41 +153,42 @@ export default function Home() {
 
       {/* Hero */}
       <section id="top" className="hero">
-        <div className="wrap fade-up">
-          <span className="status">
-            <span className="dot" />
-            Ethereum mainnet · live
-          </span>
-          <h1 style={{ marginTop: 32 }}>
-            Onchain identity for x402 agents.{" "}
-            <span className="h1-sub">Verified before every payment.</span>
-          </h1>
-          <p className="lede" style={{ marginTop: 28 }}>
-            An ENS name under{" "}
-            <span className="mono" style={{ color: "var(--ink)" }}>402bot.eth</span>,{" "}
-            <span className="mono" style={{ color: "var(--ink)" }}>402api.eth</span> or{" "}
-            <span className="mono" style={{ color: "var(--ink)" }}>402mcp.eth</span> binds your x402
-            endpoints and payTo addresses to one onchain key. Any client can then check who it&apos;s
-            paying before it pays. Issued once, no renewals for holders.
-          </p>
-          <div className="hero-ctas">
-            <button className="btn btn-primary btn-lg" onClick={() => openDrawer()}>
-              Mint a name <span className="arrow">→</span>
-            </button>
-            <a className="btn btn-ghost btn-lg" href="/verify/">Verify an endpoint</a>
-            <a className="btn btn-ghost btn-lg mono" href="#developers" style={{ fontFamily: "var(--mono)", fontSize: 13 }}>
-              View contract
-            </a>
+        <BackgroundX />
+        <div className="wrap fade-up hero-inner">
+          <div className="hero-col">
+            <span className="status">
+              <span className="dot" />
+              Ethereum mainnet · live
+            </span>
+            <h1>
+              Onchain identity for{" "}
+              <span className="nowrap"><InlineX />402 agents.</span>{" "}
+              <span className="h1-sub">Verified before every payment.</span>
+            </h1>
+            <p className="lede">
+              An ENS name under{" "}
+              <span className="mono">402bot.eth</span>,{" "}
+              <span className="mono">402api.eth</span> or{" "}
+              <span className="mono">402mcp.eth</span> binds your x402
+              endpoints and payTo addresses to one onchain key. Any client can then check who it&apos;s
+              paying before it pays. Issued once, no renewals for holders.
+            </p>
+            <div className="hero-ctas">
+              <button className="btn btn-primary btn-lg" onClick={() => openDrawer()}>
+                Mint a name <span className="arrow">→</span>
+              </button>
+              <a className="btn btn-ghost btn-lg" href="/verify/">Verify an endpoint</a>
+              <a className="btn btn-ghost btn-lg mono" href="#developers" style={{ fontFamily: "var(--mono)", fontSize: 13 }}>
+                View contract
+              </a>
+            </div>
           </div>
-          <div className="hero-meta">
-            <span><b style={{ color: "var(--ink)", fontWeight: 500 }}>{feeEth} ETH</b> &nbsp;per name</span>
-            <span className="sep" />
-            <span>No renewals for holders</span>
-            <span className="sep" />
-            <span>NameWrapper-locked</span>
-            <span className="sep" />
-            <span>Parents renewed from <b style={{ color: "var(--ink)", fontWeight: 500 }}>$X402ID</b> trading fees</span>
-          </div>
+          <dl className="hero-meta">
+            <div><dt>Price</dt><dd>{feeEth} ETH <span className="m">per name</span></dd></div>
+            <div><dt>Term</dt><dd>No renewals for holders</dd></div>
+            <div><dt>Custody</dt><dd>NameWrapper-locked</dd></div>
+            <div><dt>Parents</dt><dd><span className="m">Renewed from</span> $X402ID <span className="m">fees</span></dd></div>
+          </dl>
         </div>
       </section>
 

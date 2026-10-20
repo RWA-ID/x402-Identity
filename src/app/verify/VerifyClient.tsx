@@ -9,6 +9,7 @@ import { normalize } from "viem/ens";
 import { planPayeeRecords, readPayeeRecords, originOf, type PayeePlan } from "@x402identity/widget-core";
 import { verifyPayee, viemReader, type PayeeVerdict } from "@x402identity/payee";
 import { SiteNav } from "@/components/SiteNav";
+import { BackgroundX } from "@/components/HeroX";
 import { useOwnedNames, holdsName } from "@/hooks/useOwnedNames";
 import { useWritePayee } from "@/hooks/useWritePayee";
 import { readChallenge, readManifest, networkLabel, shortAddr, type Challenge, type Manifest } from "@/lib/challenge";
@@ -378,6 +379,7 @@ extensions: {
       />
 
       <section className="verify-hero">
+        <BackgroundX />
         <div className="wrap">
           <div className="eyebrow">Verified Payee</div>
           <h1>Prove who gets paid.</h1>
