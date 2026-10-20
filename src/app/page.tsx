@@ -142,13 +142,9 @@ export default function Home() {
           </a>
           <nav className="links">
             <a href="#namespaces">Namespaces</a>
-            <a href="#institutions">Institutions</a>
-            <a href="#architecture">Architecture</a>
+            <a href="#verified-payee">Verify</a>
             <a href="#token">Token</a>
-            <a href="#permanence">Permanence</a>
             <a href="#developers">Developers</a>
-            <a href="/integrate/">Integrate</a>
-            <a href="/verify/">Verify</a>
           </nav>
           <NavConnect onMint={() => openDrawer()} />
         </div>
@@ -161,19 +157,23 @@ export default function Home() {
             <span className="dot" />
             Ethereum mainnet · live
           </span>
-          <h1 style={{ marginTop: 32 }}>Permanent onchain identity for x402 agents.</h1>
+          <h1 style={{ marginTop: 32 }}>
+            Onchain identity for x402 agents.{" "}
+            <span className="h1-sub">Verified before every payment.</span>
+          </h1>
           <p className="lede" style={{ marginTop: 28 }}>
-            ENS subnames under{" "}
+            An ENS name under{" "}
             <span className="mono" style={{ color: "var(--ink)" }}>402bot.eth</span>,{" "}
-            <span className="mono" style={{ color: "var(--ink)" }}>402api.eth</span>, and{" "}
-            <span className="mono" style={{ color: "var(--ink)" }}>402mcp.eth</span> — issued once,
-            no renewals for holders, resolvable on every chain.
+            <span className="mono" style={{ color: "var(--ink)" }}>402api.eth</span> or{" "}
+            <span className="mono" style={{ color: "var(--ink)" }}>402mcp.eth</span> binds your x402
+            endpoints and payTo addresses to one onchain key. Any client can then check who it&apos;s
+            paying before it pays. Issued once, no renewals for holders.
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary btn-lg" onClick={() => openDrawer()}>
               Mint a name <span className="arrow">→</span>
             </button>
-            <a className="btn btn-ghost btn-lg" href="#architecture">Read the spec</a>
+            <a className="btn btn-ghost btn-lg" href="/verify/">Verify an endpoint</a>
             <a className="btn btn-ghost btn-lg mono" href="#developers" style={{ fontFamily: "var(--mono)", fontSize: 13 }}>
               View contract
             </a>
@@ -362,7 +362,7 @@ export default function Home() {
                 <rect x="0" y="0" width="180" height="100" rx="8" fill="var(--bg)" stroke="var(--line-2)" />
                 <text x="90" y="22" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="10" fill="var(--muted)" letterSpacing="1.4">ENS NAMEWRAPPER</text>
                 <text x="90" y="50" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="13" fill="var(--ink)">0xD441…6401</text>
-                <text x="90" y="72" textAnchor="middle" fontFamily="Inter" fontSize="11" fill="var(--ink-2)">fuses: CANNOT_UNWRAP</text>
+                <text x="90" y="72" textAnchor="middle" fontFamily="Inter" fontSize="11" fill="var(--ink-2)">fuse burned at mint:</text>
                 <text x="90" y="88" textAnchor="middle" fontFamily="Inter" fontSize="11" fill="var(--ink-2)">PARENT_CANNOT_CONTROL</text>
               </g>
 
@@ -412,11 +412,111 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Verified payee */}
+      <section id="verified-payee" className="section-divider">
+        <div className="wrap">
+          <div className="sec-head">
+            <span className="index">04 / Verified payee</span>
+            <div className="h">
+              <h2>Know who you&apos;re paying before you pay.</h2>
+              <p>
+                A 402 response tells a client which address to pay. Nothing in it proves that address
+                belongs to the site that sent it. An x402 name closes that gap: the owner lists their
+                origins and payTo addresses on the name, and any client can check a 402 against them.
+              </p>
+            </div>
+          </div>
+
+          <div className="props" style={{ marginTop: 0 }}>
+            <div className="prop">
+              <span className="prop-num">STEP 01</span>
+              <h3>Set two records</h3>
+              <p>
+                On your name, list the origins that serve your endpoints in{" "}
+                <span className="mono">org.x402.origins</span>, and set your payTo as the name&apos;s
+                address on that network. One wallet transaction from the{" "}
+                <a href="/verify/" style={{ color: "var(--accent)" }}>verify wizard</a>.
+              </p>
+            </div>
+            <div className="prop">
+              <span className="prop-num">STEP 02</span>
+              <h3>Declare the name in your 402</h3>
+              <p>
+                Your server adds the <span className="mono">payee-name</span> extension to its 402
+                response. It names the operator; it doesn&apos;t change how payment works.
+              </p>
+            </div>
+            <div className="prop">
+              <span className="prop-num">STEP 03</span>
+              <h3>Clients check before paying</h3>
+              <p>
+                A client reads the 402, resolves the name on Ethereum, and confirms both the origin it
+                contacted and the payTo are listed. It gets a verdict, not a guess.
+              </p>
+            </div>
+          </div>
+
+          <div className="payee-grid">
+            <div className="code-card">
+              <div className="code-head">
+                <span className="title">verdict · api.x402id.dev · 2026-10-20</span>
+              </div>
+              <div className="code-body">
+                <pre>
+{"{"}
+{"\n"}  <span className="n">&quot;verdict&quot;</span>: <span className="k">true</span>,
+{"\n"}  <span className="n">&quot;reason&quot;</span>: <span className="s">&quot;payee-bound&quot;</span>,
+{"\n"}  <span className="n">&quot;name&quot;</span>: <span className="s">&quot;test.402api.eth&quot;</span>,
+{"\n"}  <span className="n">&quot;matched_by&quot;</span>: <span className="s">&quot;addr&quot;</span>,
+{"\n"}  <span className="n">&quot;parent_can_control&quot;</span>: <span className="k">false</span>,
+{"\n"}  <span className="n">&quot;expires_at&quot;</span>: <span className="s">&quot;2038-02-14T12:17:23Z&quot;</span>
+{"\n"}{"}"}
+                </pre>
+              </div>
+            </div>
+
+            <div className="fuse-list" style={{ marginTop: 0 }}>
+              <div className="fuse-row">
+                <div className="k">LIVE</div>
+                <div className="v">Our own paid endpoint, api.x402id.dev, verifies as payee-bound through test.402api.eth.</div>
+              </div>
+              <div className="fuse-row">
+                <div className="k">BAZAAR</div>
+                <div className="v">The first seller in Coinbase&apos;s Bazaar index to declare payee-name (1 of ~35k listings, Oct 2026).</div>
+              </div>
+              <div className="fuse-row">
+                <div className="k">STANDARDS</div>
+                <div className="v">Payee identity is a goal in the x402 Identity working group&apos;s draft charter; the payee-name extension is a proposal there.</div>
+              </div>
+              <div className="fuse-row">
+                <div className="k">TOOLS</div>
+                <div className="v">
+                  <span className="mono">@x402identity/payee</span> for clients, and the{" "}
+                  <span className="mono">verify_payee</span> tool in <span className="mono">@x402identity/mcp</span> for agents.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <a className="btn btn-primary" href="/verify/">
+              Verify an endpoint <span className="arrow">→</span>
+            </a>
+            <a className="btn btn-ghost" href="https://github.com/RWA-ID/x402-Identity/blob/main/specs/extensions/payee-name.md" target="_blank" rel="noopener">
+              Read the spec <span className="arrow">↗</span>
+            </a>
+            <a className="btn btn-ghost" href="https://www.npmjs.com/package/@x402identity/payee" target="_blank" rel="noopener">
+              @x402identity/payee <span className="arrow">↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Live Metrics */}
       <section id="metrics" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">04 / Live metrics</span>
+            <span className="index">05 / Live metrics</span>
             <div className="h">
               <h2>Verifiable, in real time.</h2>
               <p>Everything you can grep on Etherscan, surfaced as live state. No analytics layer, no proprietary dashboard — just the chain.</p>
@@ -431,7 +531,7 @@ export default function Home() {
       <section id="token" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">05 / Token</span>
+            <span className="index">06 / Token</span>
             <div className="h">
               <h2>$X402ID — the token for the Identity Hub.</h2>
               <p>
@@ -501,7 +601,7 @@ export default function Home() {
       <section id="permanence" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">06 / Permanence</span>
+            <span className="index">07 / Permanence</span>
             <div className="h">
               <h2>An identity you can build a 10-year roadmap on.</h2>
               <p>
@@ -577,7 +677,7 @@ export default function Home() {
       <section id="developers" className="section-divider">
         <div className="wrap">
           <div className="sec-head">
-            <span className="index">07 / Integrate</span>
+            <span className="index">08 / Integrate</span>
             <div className="h">
               <h2>One contract, two calls, no SDK required.</h2>
               <p>
@@ -645,6 +745,9 @@ export default function Home() {
           </div>
 
           <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <a className="btn btn-primary" href="/integrate/">
+              Platform integration guide <span className="arrow">→</span>
+            </a>
             <a className="btn btn-ghost" href="https://github.com/RWA-ID/x402-Identity" target="_blank" rel="noopener">
               GitHub repository <span className="arrow">↗</span>
             </a>
@@ -669,7 +772,7 @@ export default function Home() {
                 <span className="brand-sub">/ identity hub</span>
               </a>
               <p className="foot-tag">
-                Permanent onchain identity for x402 agents — issued under 402bot.eth, 402api.eth, and 402mcp.eth.
+                Onchain identity for x402 agents, verified before every payment — issued under 402bot.eth, 402api.eth, and 402mcp.eth.
               </p>
             </div>
             <div className="foot-col">
@@ -677,9 +780,13 @@ export default function Home() {
               <ul>
                 <li><button onClick={() => openDrawer()} style={{ background: "none", border: 0, padding: 0, cursor: "pointer", color: "inherit", font: "inherit" }}>Mint</button></li>
                 <li><a href="#namespaces">Namespaces</a></li>
+                <li><a href="#institutions">Institutions</a></li>
                 <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#verified-payee">Verified payee</a></li>
+                <li><a href="/verify/">Verify an endpoint</a></li>
                 <li><a href="#metrics">Live metrics</a></li>
                 <li><a href="#token">$X402ID token</a></li>
+                <li><a href="#permanence">Permanence</a></li>
                 <li><a href="/integrate/">Integrate (platforms)</a></li>
               </ul>
             </div>

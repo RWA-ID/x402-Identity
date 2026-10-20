@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Analytics } from "@/components/Analytics";
-import { SITE } from "@/lib/seo";
-const OG_ALT =
-  "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";
+import { SITE, OG_ALT } from "@/lib/seo";
 
 // metadataBase lets every page express canonical/og:image as a relative path and
 // still emit absolute URLs, which is what scrapers require.
@@ -34,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "x402 Identity Hub",
     url: "/",
     title: "x402 Identity Hub",
-    description: "Mint permanent ENS subnames for your AI agents.",
+    description: "Onchain identity for x402 agents, verified before every payment.",
     images: [{ url: "/og.png", width: 1200, height: 630, type: "image/png", alt: OG_ALT }],
   },
   twitter: {
@@ -43,7 +41,7 @@ export const metadata: Metadata = {
     creator: "@x402identity",
     title: "x402 Identity Hub",
     description:
-      "Mint permanent ENS subnames for your AI agents under 402bot.eth, 402api.eth, 402mcp.eth.",
+      "Onchain identity for x402 agents, verified before every payment. ENS names under 402bot.eth, 402api.eth, 402mcp.eth.",
     images: [{ url: "/og.png", alt: OG_ALT }],
   },
   icons: {

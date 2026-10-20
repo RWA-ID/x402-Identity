@@ -167,13 +167,13 @@ nav.links a:focus-visible {
 }
 
 .nav-cta { display: flex; align-items: center; gap: 12px; }
-@media (max-width: 1279px) { .brand-sub { display: none; } }
-@media (max-width: 1199px) {
+@media (max-width: 1023px) { .brand-sub { display: none; } }
+@media (max-width: 959px) {
   .nav-inner { gap: 16px; }
   nav.links { gap: 0; }
   nav.links a { font-size: 11px; letter-spacing: 0.04em; padding: 5px 7px; }
 }
-@media (max-width: 1023px) { nav.links { display:none; } }
+@media (max-width: 859px) { nav.links { display:none; } }
 
 /*-- Buttons ---------------------------------------------------------*/
 .btn {
@@ -223,7 +223,8 @@ nav.links a:focus-visible {
 
 /*-- Hero ---------------------------------------------------------*/
 .hero { padding: 120px 0 96px; }
-.hero h1 { max-width: 16ch; }
+.hero h1 { max-width: 27ch; text-wrap: balance; }
+.hero h1 .h1-sub { display: block; color: var(--muted); }
 .hero .lede { margin-top: 28px; }
 .hero-ctas {
   margin-top: 40px;
@@ -449,6 +450,17 @@ nav.links a:focus-visible {
 @media (max-width: 600px) {
   .fuse-row { grid-template-columns: 1fr; gap: 4px; }
 }
+
+.payee-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 48px;
+  align-items: start;
+  margin-top: 56px;
+}
+@media (max-width: 900px) { .payee-grid { grid-template-columns: 1fr; gap: 32px; } }
+.payee-grid .fuse-row { grid-template-columns: 120px 1fr; }
+@media (max-width: 600px) { .payee-grid .fuse-row { grid-template-columns: 1fr; } }
 
 .timeline {
   border: 1px solid var(--line);

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const SITE = "https://x402id.dev";
 
 export const OG_ALT =
-  "x402 Identity Hub — permanent onchain identity for x402 agents. ENS subnames under 402bot.eth, 402api.eth, and 402mcp.eth.";
+  "x402 Identity Hub — onchain identity for x402 agents, verified before every payment. ENS names under 402bot.eth, 402api.eth, and 402mcp.eth.";
 
 export const OG_IMAGE = {
   url: "/og.png",
