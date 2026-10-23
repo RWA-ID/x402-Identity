@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { MintRow } from "@/types";
 import { useSetAddress } from "@/hooks/useSetAddress";
+import { PayoutPicker } from "@/components/PayoutPicker";
+import { emptyPayout, payoutLabels, solanaOk, type Payout } from "@/lib/payout";
 
 type SuccessModalProps = {
   minted: MintRow[];
@@ -13,15 +15,15 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
   const names = minted.map((r) => `${r.label}.${r.parent.label}`);
   const [copied, setCopied] = useState<string | null>(null);
   const link = useSetAddress();
-
-  // A fresh name resolves to 0x0 — prompt the address signature once, right after the mint.
-  const prompted = useRef(false);
-  useEffect(() => {
-    if (prompted.current || !link.address || names.length === 0) return;
-    prompted.current = true;
-    void link.setAddress(names);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [link.address]);
+  // A fresh name resolves to 0x0. The builder picks where they get paid, then signs once.
+  const [payout, setPayout] = useState<Payout>(emptyPayout);
+  const [written, setWritten] = useState<Payout | null>(null);
+  const busy = link.state === "signing" || link.state === "confirming";
+  const save = async () => {
+    const chosen = payout;
+    await link.setAddress(names, chosen);
+    setWritten(chosen);
+  };
 
   const tweetText = encodeURIComponent(
     names.length === 1
@@ -80,8 +82,8 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
       <div className="success-link-step">
         {link.state === "linked" ? (
           <p className="success-sub" style={{ color: "var(--accent)" }}>
-            {names.length === 1 ? "It now resolves" : "They now resolve"} to{" "}
-            {link.address?.slice(0, 6)}…{link.address?.slice(-4)} on Ethereum and Base.{" "}
+            {names.length === 1 ? "It now resolves" : "They now resolve"} to your wallet on{" "}
+            {listText(payoutLabels(written ?? payout))}.{" "}
             <a href={`/verify/?name=${encodeURIComponent(names.join(","))}`} style={{ textDecoration: "underline" }}>
               Running an x402 endpoint? Make {names.length === 1 ? "it" : "them"} a verified payee →
             </a>
@@ -89,21 +91,21 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
         ) : (
           <>
             <p className="success-sub">
-              Last step: point {names.length === 1 ? "it" : "them"} at your wallet so{" "}
-              {names.length === 1 ? "it resolves" : "they resolve"} on Ethereum and Base. Until then{" "}
+              Last step: point {names.length === 1 ? "it" : "them"} at your wallet. Until then{" "}
               {names.length === 1 ? "the name resolves" : "the names resolve"} to nothing.
             </p>
+            {link.address && <PayoutPicker address={link.address} value={payout} onChange={setPayout} disabled={busy} />}
             <button
               className="btn btn-primary"
               style={{ width: "100%", marginTop: 12, height: 46 }}
-              onClick={() => link.setAddress(names)}
-              disabled={link.state === "signing" || link.state === "confirming"}
+              onClick={save}
+              disabled={busy || !link.address || !solanaOk(payout)}
             >
               {link.state === "signing"
                 ? "Confirm in wallet…"
                 : link.state === "confirming"
                   ? "Confirming on-chain…"
-                  : "Set my address"}
+                  : "Set my addresses"}
             </button>
             {link.error && (
               <p style={{ marginTop: 8, fontFamily: "var(--mono)", fontSize: 11, color: "#B0413E" }}>
@@ -146,4 +148,9 @@ export function SuccessModal({ minted, onClose }: SuccessModalProps) {
       </button>
     </div>
   );
+}
+
+/** "A", "A and B", "A, B and C". */
+function listText(items: string[]): string {
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }

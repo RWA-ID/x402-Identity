@@ -4,15 +4,17 @@ import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { namehash } from "viem";
-import { buildSetAddressCalls, getLowFees, getResolver, publicResolverAbi } from "@x402identity/widget-core";
+import { getLowFees, getResolver, publicResolverAbi } from "@x402identity/widget-core";
 import { writeChainId } from "@/lib/embedded";
+import { buildPayoutCalls, emptyPayout, type Payout } from "@/lib/payout";
 
 export type SetAddressState = "idle" | "signing" | "confirming" | "linked" | "failed";
 
 /**
  * Minting writes no address record, so a fresh name resolves to 0x0. This
- * points each name's ETH and Base records at the connected wallet in one
- * resolver multicall. The wallet must own every name.
+ * points each name at the connected wallet in one resolver multicall:
+ * Ethereum and Base always, plus whatever `payout` adds. The wallet must own
+ * every name.
  */
 export function useSetAddress() {
   const { address, chainId, connector } = useAccount();
@@ -22,7 +24,7 @@ export function useSetAddress() {
   const [state, setState] = useState<SetAddressState>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const setAddress = async (names: string[]) => {
+  const setAddress = async (names: string[], payout: Payout = emptyPayout()) => {
     if (!address || !client || names.length === 0) return;
     const nodes = names.map((n) => namehash(n));
     setError(null);
@@ -37,7 +39,7 @@ export function useSetAddress() {
         address: resolver,
         abi: publicResolverAbi,
         functionName: "multicall",
-        args: [nodes.flatMap((n) => buildSetAddressCalls(n, address))],
+        args: [nodes.flatMap((n) => buildPayoutCalls(n, address, payout))],
       });
       setState("confirming");
       // waitForTransactionReceipt resolves on a revert too — check the status.

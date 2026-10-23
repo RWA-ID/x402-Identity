@@ -1256,3 +1256,21 @@ html:not([data-theme="dark"]) .arch-box::before {
   overflow-wrap: anywhere;
 }
 .verify-origins li[data-removed="true"] .mono { text-decoration: line-through; color: var(--muted-2); }
+
+/* Payout picker: where a name says its owner gets paid */
+.payout { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.payout-head { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.payout-row { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink); line-height: 1.45; cursor: pointer; }
+.payout-row input { margin-top: 3px; accent-color: var(--accent); flex: none; }
+.payout-row[data-off="true"], .payout-fixed { cursor: default; }
+.payout-row[data-off="true"] > span { color: var(--muted); }
+.payout-mono { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+.payout-note { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.payout-more { align-self: flex-start; background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--accent); text-decoration: underline; cursor: pointer; }
+.payout-chains { display: flex; flex-wrap: wrap; gap: 6px; }
+.payout-chains .payout-note { flex-basis: 100%; }
+.payout-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+.payout-chip[data-on="true"] { border-color: var(--accent); color: var(--ink); }
+.payout-chip input { accent-color: var(--accent); margin: 0; }
+.payout-sol .label-input { width: 100%; font-size: 13px; }
+.payout-error { margin-top: 6px; font-family: var(--mono); font-size: 11px; color: #B0413E; }

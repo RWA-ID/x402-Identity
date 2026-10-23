@@ -9,6 +9,8 @@ import { getAddressStatus, type AddressStatus } from "@x402identity/widget-core"
 import { ADDRESSES } from "@/lib/contracts";
 import { PARENTS } from "@/lib/parents";
 import { useSetAddress } from "@/hooks/useSetAddress";
+import { PayoutPicker } from "@/components/PayoutPicker";
+import { emptyPayout, solanaOk, type Payout } from "@/lib/payout";
 
 const NAME_WRAPPER_ABI = [
   {
@@ -50,6 +52,7 @@ export function SetAddressPanel() {
   const [input, setInput] = useState("");
   const [lookup, setLookup] = useState<Lookup>({ kind: "idle" });
   const [refresh, setRefresh] = useState(0);
+  const [payout, setPayout] = useState<Payout>(emptyPayout);
   const parsed = parseName(input);
   const node = parsed?.node;
   const name = parsed?.name;
@@ -156,6 +159,10 @@ export function SetAddressPanel() {
         </div>
       )}
 
+      {lookup.kind === "ok" && isOwner && address && (
+        <PayoutPicker address={address} value={payout} onChange={setPayout} disabled={busy} />
+      )}
+
       {!isConnected ? (
         <button className="btn btn-ghost" style={{ width: "100%", marginTop: 14 }} onClick={() => openAppKit()}>
           Connect wallet <span className="arrow">→</span>
@@ -164,16 +171,18 @@ export function SetAddressPanel() {
         <button
           className="btn btn-ghost"
           style={{ width: "100%", marginTop: 14 }}
-          disabled={!parsed || !isOwner || busy || (lookup.kind === "ok" && lookup.status.linked)}
-          onClick={() => parsed && link.setAddress([parsed.name])}
+          disabled={!parsed || !isOwner || busy || !solanaOk(payout)}
+          onClick={() => parsed && link.setAddress([parsed.name], payout)}
         >
           {link.state === "signing"
             ? "Confirm in wallet…"
             : link.state === "confirming"
               ? "Confirming on-chain…"
-              : lookup.kind === "ok" && lookup.status.linked
-                ? "Already set"
-                : "Set my address"}
+              : link.state === "linked"
+                ? "Saved"
+                : lookup.kind === "ok" && lookup.status.linked
+                  ? "Update my addresses"
+                  : "Set my addresses"}
         </button>
       )}
 
