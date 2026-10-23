@@ -1,7 +1,8 @@
 "use client";
 
-import { useAccount, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, usePublicClient, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { getLowFees } from "@x402identity/widget-core";
 import { useFreshMintFee } from "@/hooks/useMintFee";
 import { ADDRESSES, REGISTRAR_ABI } from "@/lib/contracts";
 import { writeChainId } from "@/lib/embedded";
@@ -9,6 +10,7 @@ import { writeChainId } from "@/lib/embedded";
 export function useRegister() {
   const { chainId, connector } = useAccount();
   const { switchChainAsync } = useSwitchChain();
+  const client = usePublicClient({ chainId: mainnet.id });
   const { writeContract, reset, data: hash, isPending, error: writeError } = useWriteContract();
 
   const readMintFee = useFreshMintFee();
@@ -28,12 +30,16 @@ export function useRegister() {
       }
     }
     let fee: bigint;
+    // Wallets default to a tip many times the base fee; suggest the network's own.
+    // A failed estimate falls back to the wallet's fees rather than blocking the mint.
+    const fees = client ? getLowFees(client).catch(() => ({})) : Promise.resolve({});
     try {
       fee = await readMintFee();
     } catch {
       return;
     }
     writeContract({
+      ...(await fees),
       chainId: writeChainId(connector, mainnet.id),
       address: ADDRESSES.mainnet.registrar,
       abi: REGISTRAR_ABI,

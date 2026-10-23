@@ -325,7 +325,7 @@ export function MintDrawer({ open, onClose, initialParent }: Props) {
           </div>
 
           <p className="hint" style={{ marginTop: 0, marginBottom: 12 }}>
-            The wallet you mint with becomes your name&apos;s Ethereum and Base address. After the mint,
+            After the mint, choose where you get paid (Ethereum, Base, other EVM chains, Solana) and
             confirm one small transaction to set it.
           </p>
 
