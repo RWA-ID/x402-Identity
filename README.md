@@ -263,10 +263,10 @@ The frontend is a static export (`next build` → `out/`), deployed twice from t
 
 The workers keep their `*.workers.dev` URLs alongside `api.x402id.dev` and `swap.x402id.dev`; those URLs are cataloged elsewhere and must never be retired.
 
-**IPFS CID:** `bafybeihinls6i3zzmecqoddkmghme6vhdvwgnlc7pznydkb4s4pmhdhvyy`
+**IPFS CID:** `bafybeib2bmq4kkikl5nl7u6y5rxfq2ysfuzb2a6cw425vfbfpd3axz2jba`
 
 ```
-https://ipfs.io/ipfs/bafybeihinls6i3zzmecqoddkmghme6vhdvwgnlc7pznydkb4s4pmhdhvyy/
+https://ipfs.io/ipfs/bafybeib2bmq4kkikl5nl7u6y5rxfq2ysfuzb2a6cw425vfbfpd3axz2jba/
 ```
 
 ---
