@@ -23,8 +23,9 @@ On the ENS name you declare:
 | Record | Value |
 |---|---|
 | text `org.x402.origins` | `https://weather.example.workers.dev` (space-separated origins) |
-| address for the chain you are paid on | your `payTo` (Base = coin type `2147492101`) |
-| text `org.x402.payto` (optional) | further `eip155:8453:0x…` accounts, space-separated |
+| address for the chain you are paid on | your `payTo` (Base = coin type `2147492101`, Solana = `501`) |
+| default EVM address (optional) | coin type `2147483648`: your `payTo` on every EVM chain without its own record (EOAs only) |
+| text `org.x402.payto` (optional) | further CAIP-10 accounts, space-separated: `eip155:8453:0x…`, or a Lightning node key `lnbtc:000000000019d6689c085ae165831e93:03…` |
 
 Then add to your 402 response:
 

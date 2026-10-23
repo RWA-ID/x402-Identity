@@ -1,4 +1,4 @@
-import { type Address, type Hex, type PublicClient, encodeFunctionData, getAddress, isAddress, namehash } from "viem";
+import { type Address, type Hex, type PublicClient, bytesToHex, encodeFunctionData, getAddress, hexToBytes, isAddress, namehash } from "viem";
 import { toCoinType } from "viem/ens";
 import { getResolver, publicResolverAbi } from "./resolver.js";
 
@@ -34,6 +34,50 @@ export const textResolverAbi = [
   },
 ] as const;
 
+/** CAIP-2 id of Solana mainnet, and its SLIP-44 coin type (ENSIP-9). */
+export const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+export const SOLANA_COIN_TYPE = 501n;
+
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+/** The 32 bytes of a base58 Solana public key, or null when it isn't one. */
+export function solanaKeyBytes(key: string): Hex | null {
+  let n = 0n;
+  for (const ch of key) {
+    const i = B58.indexOf(ch);
+    if (i < 0) return null;
+    n = n * 58n + BigInt(i);
+  }
+  const body: number[] = [];
+  for (; n > 0n; n >>= 8n) body.unshift(Number(n & 0xffn));
+  let zeros = 0;
+  while (key[zeros] === "1") zeros++; // each leading "1" is a leading zero byte
+  const bytes = new Uint8Array(zeros + body.length);
+  bytes.set(body, zeros);
+  return bytes.length === 32 ? bytesToHex(bytes) : null;
+}
+
+function solanaKey(bytes: Hex): string | null {
+  const b = hexToBytes(bytes);
+  if (b.length !== 32) return null;
+  let n = 0n;
+  for (const x of b) n = (n << 8n) | BigInt(x);
+  let out = "";
+  for (; n > 0n; n /= 58n) out = B58[Number(n % 58n)] + out;
+  for (const x of b) {
+    if (x !== 0) break;
+    out = "1" + out;
+  }
+  return out;
+}
+
+/** ENS coin type of a network this module writes an address record for, or null. */
+function addrCoinType(network: string): bigint | null {
+  if (network === SOLANA_MAINNET) return SOLANA_COIN_TYPE;
+  const evm = /^eip155:(\d+)$/.exec(network);
+  return evm ? toCoinType(Number(evm[1])) : null;
+}
+
 /** One payment option from a 402 challenge. */
 export interface PayeeAccept {
   network: string;
@@ -44,9 +88,13 @@ export interface PayeeAccept {
 export interface PayeePlan {
   /** RFC 6454 origins, deduplicated. */
   origins: string[];
-  /** One primary payTo per EVM network, written as an address record. */
-  addrs: { network: string; coinType: bigint; address: Address }[];
-  /** CAIP-10 accounts that do not fit an address record: a second payTo on a network, or a non-EVM network. */
+  /**
+   * One primary payTo per network that has an ENS coin type (EVM chains and
+   * Solana), written as an address record. `address` is the payTo as the 402
+   * carries it; `value` is the record's bytes.
+   */
+  addrs: { network: string; coinType: bigint; address: string; value: Hex }[];
+  /** CAIP-10 accounts that do not fit an address record: a second payTo on a network, or a network without a coin type (e.g. Lightning). */
   payto: string[];
 }
 
@@ -62,8 +110,8 @@ export function originOf(url: string): string | null {
 
 /**
  * Plan the records that authorize `accepts` for the given origins. The first
- * payTo on each EVM network becomes that chain's address record; anything else
- * goes on the org.x402.payto list.
+ * payTo on each EVM network or on Solana becomes that network's address
+ * record; anything else goes on the org.x402.payto list.
  */
 export function planPayeeRecords(origins: string[], accepts: PayeeAccept[]): PayeePlan {
   const cleanOrigins = [...new Set(origins.map(originOf).filter((o): o is string => o !== null))];
@@ -76,8 +124,10 @@ export function planPayeeRecords(origins: string[], accepts: PayeeAccept[]): Pay
     const key = `${network}:${evm ? account.toLowerCase() : account}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    if (evm && isAddress(account) && !addrs.some((a) => a.network === network)) {
-      addrs.push({ network, coinType: toCoinType(Number(evm[1])), address: account });
+    const value = evm ? (isAddress(account) ? (account as Hex) : null) : network === SOLANA_MAINNET ? solanaKeyBytes(account) : null;
+    const coinType = addrCoinType(network);
+    if (value && coinType !== null && !addrs.some((a) => a.network === network)) {
+      addrs.push({ network, coinType, address: account, value });
     } else {
       payto.push(`${network}:${account}`);
     }
@@ -101,7 +151,7 @@ export function buildPayeeCalls(node: Hex, plan: PayeePlan): Hex[] {
       encodeFunctionData({
         abi: publicResolverAbi,
         functionName: "setAddr",
-        args: [node, a.coinType, a.address],
+        args: [node, a.coinType, a.value],
       }),
     ),
     encodeFunctionData({
@@ -131,28 +181,29 @@ export async function readPayeeRecords(
   publicClient: PublicClient,
   name: string,
   networks: string[],
-): Promise<{ origins: string; payto: string; addrs: Record<string, Address | null> }> {
+): Promise<{ origins: string; payto: string; addrs: Record<string, string | null> }> {
   const resolver = await getResolver(publicClient, name);
   const node = namehash(name);
   const text = (key: string) =>
     publicClient.readContract({ address: resolver, abi: textResolverAbi, functionName: "text", args: [node, key] });
-  const evm = networks.filter((n) => /^eip155:\d+$/.test(n));
+  const withAddr = networks.filter((n) => addrCoinType(n) !== null);
   const [origins, payto, ...raw] = await Promise.all([
     text(PAYEE_ORIGINS_KEY),
     text(PAYEE_PAYTO_KEY),
-    ...evm.map((n) =>
+    ...withAddr.map((n) =>
       publicClient.readContract({
         address: resolver,
         abi: publicResolverAbi,
         functionName: "addr",
-        args: [node, toCoinType(Number(n.split(":")[1]))],
+        args: [node, addrCoinType(n)!],
       }) as Promise<Hex>,
     ),
   ]);
-  const addrs: Record<string, Address | null> = {};
-  evm.forEach((n, i) => {
+  const addrs: Record<string, string | null> = {};
+  withAddr.forEach((n, i) => {
     const b = raw[i];
-    addrs[n] = b && b.length === 42 && !/^0x0{40}$/.test(b) ? getAddress(b) : null;
+    if (n === SOLANA_MAINNET) addrs[n] = b && !/^0x0*$/.test(b) ? solanaKey(b) : null;
+    else addrs[n] = b && b.length === 42 && !/^0x0{40}$/.test(b) ? getAddress(b) : null;
   });
   return { origins, payto, addrs };
 }

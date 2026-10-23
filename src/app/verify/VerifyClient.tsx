@@ -323,7 +323,9 @@ export default function VerifyClient() {
 
   const payoutElsewhere =
     address &&
-    plans.some((p) => p.plan?.addrs.some((a) => getAddress(a.address) !== getAddress(address)));
+    plans.some((p) =>
+      p.plan?.addrs.some((a) => a.network.startsWith("eip155:") && getAddress(a.address) !== getAddress(address)),
+    );
 
   const verify = async (name: string, override?: string) => {
     if (override !== undefined) patch(name, { url: override });

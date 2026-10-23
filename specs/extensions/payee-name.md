@@ -118,7 +118,10 @@ The `org.x402.*` key names follow the ENSIP-5 reverse-DNS convention for service
 |---|---|
 | `eip155:1` | `60` |
 | `eip155:<chainId>`, chainId ≠ 1 | `0x80000000 \| chainId` (ENSIP-11), e.g. Base `eip155:8453` → `2147492101` |
+| `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (mainnet) | `501` (SLIP-44, ENSIP-9). The record holds the 32-byte public key; it is compared as its base58 text. |
 | any other namespace | not mapped by this draft; use `org.x402.payto` |
+
+**Default EVM address.** For every `eip155` network, an unset `addr(coinType)` falls back to the ENSIP-19 default EVM address, `addr(0x80000000)`. ENSIP-19 places this fallback in the resolver, but most deployed resolvers (ENS's PublicResolver included) don't implement it, so the verifier applies it. A chain's own record always takes precedence; the default never applies to a non-EVM network. One default record therefore authorizes the same `payTo` on every EVM chain, including chains the operator adds later.
 
 **Bitcoin Lightning.** Under the `exact` scheme on `lnbtc`, `payTo` is the receiver node's compressed secp256k1 public key (66 lowercase hex characters), not an on-chain Bitcoin address. A `bip122` address record (coin type `0`) therefore never authorizes it. List the node key on `org.x402.payto`, e.g. `lnbtc:000000000019d6689c085ae165831e93:03c913…9a80` in full. This binding matters most for Lightning: the facilitator checks only that the invoice signer equals `payTo`, and the server chooses `payTo` itself, so the name is the operator's statement that the node is theirs.
 
@@ -131,12 +134,12 @@ Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-
 **Inputs:** the `PaymentRequired` object, and the origin `O` the client actually sent the request to. `O` MUST be taken from the client's own connection, never from `resource.url`, which the server writes.
 
 1. **Name.** Read `extensions["payee-name"].info.name`. If it is absent, the extension does not apply. If it is not ENSIP-15 normalized → `false`, `name-not-normalized`. If it is not under `.eth` → `inconclusive`, `unsupported-name`. This draft defines expiry only for the `.eth` registrar; DNS-imported names are future work.
-2. **Resolve** through the ENS Universal Resolver on Ethereum mainnet: `org.x402.origins`, `org.x402.payto`, and `addr(coinType)` for each distinct accept `network`. A transport or RPC failure → `inconclusive`, `resolution-failed`. **A failed read MUST NOT be reported as an absent record.** A throttled RPC and an unset record look alike unless the verifier keeps them apart.
+2. **Resolve** through the ENS Universal Resolver on Ethereum mainnet: `org.x402.origins`, `org.x402.payto`, `addr(coinType)` for each distinct accept `network`, and, when any accept is on an `eip155` network, the default EVM address `addr(0x80000000)`. A transport or RPC failure → `inconclusive`, `resolution-failed`. **A failed read MUST NOT be reported as an absent record.** A throttled RPC and an unset record look alike unless the verifier keeps them apart.
 3. **Expiry.** Compute the name's effective expiry: the earliest expiry along its path up to and including the `.eth` second-level name (NameWrapper expiry for wrapped names, BaseRegistrar `nameExpires` for the unwrapped second-level name). An expired ENS name **still resolves**, so this check cannot be skipped.
    - past expiry and grace period → `false`, `name-expired`
    - inside the `.eth` grace period → `inconclusive`, `name-in-grace`
 4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402. Listing an origin is an authorization by the name's owner, not a claim to control the host's DNS, so a tenant on a platform suffix can list its tenant origin. A verifier checks only `O` and never contacts the other listed origins, so an origin the operator has stopped serving cannot make a challenge fail.
-5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
+5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` (for an `eip155` network with no record of its own, the default EVM address) or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization; every other account compares exactly. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
 6. **Pass.** All checks hold for an accept → `true`, `payee-bound`, `accepts_index: i`.
 
 A verdict is per accept, as in the Domain Discovery WG verifier schema: a challenge can carry one authorized `payTo` and one that is not.
@@ -191,13 +194,15 @@ A closed, append-only set, which no release renumbers or reuses:
 
 - Set `org.x402.origins` before declaring the name. Otherwise every client reports `origin-not-listed`.
 - Remove origins you no longer serve. A stale entry fails nothing, but it keeps authorizing whoever controls that hostname next (a reassigned tunnel or platform subdomain) to declare your name. The payee check still applies, so such a host can only direct payments to addresses your name lists.
-- Prefer one `addr` record per chain. Use `org.x402.payto` only when you actually rotate or split. Every address listed there is publicly linked to the name.
+- Prefer one `addr` record per chain. Use `org.x402.payto` only when you actually rotate or split, or for a network without a coin type (Lightning). Every address listed there is publicly linked to the name.
+- If you are paid at the same address on every EVM chain, set the default EVM address once. Set it only for an externally owned account: a contract wallet's address can belong to someone else on a chain where you never deployed it.
 - Operators who want unlinkable payees can use separate names. The extension never asks for a reverse record.
 
 ## Security considerations
 
 - **Name replay:** the origin check (step 4) is what binds a declaration to a server. A verifier that skips it validates nothing.
 - **Stale origins:** a listed origin the operator no longer controls can be taken over and declare the name. It passes step 4, but step 5 still limits it to the name's listed `payTo` addresses: it can impersonate the service, not redirect funds.
+- **Default EVM address:** it authorizes its address on every EVM chain without a record of its own. If that address is a contract wallet that doesn't exist on some chain, whoever can deploy there may control it. The origin check still applies, so this lets that party receive payments only through an origin the name lists.
 - **Expiry:** expired names keep resolving and keep passing forward-lookup checks. Step 3 is required.
 - **Lookalikes:** step 1 refuses non-normalized names. Rendering the name for humans should follow ENSIP-15 display guidance.
 - **Parent control:** subnames whose parent can still control them can be rewritten by the parent. `parent_can_control` exposes this.

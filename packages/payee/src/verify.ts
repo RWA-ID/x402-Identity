@@ -1,4 +1,4 @@
-import { isAddress, getAddress, zeroAddress } from "viem";
+import { isAddress, getAddress, hexToBytes, isHex, zeroAddress } from "viem";
 import { normalize, toCoinType } from "viem/ens";
 import { NAME_WRAPPER, type EnsReader } from "./reader.js";
 
@@ -70,10 +70,46 @@ export function toOrigin(value: string): string | null {
   }
 }
 
+/** CAIP-2 id of Solana mainnet. */
+export const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+/** SLIP-44 coin type of Solana (ENSIP-9). Its address record holds the 32-byte public key. */
+export const SOLANA_COIN_TYPE = 501n;
+/** ENSIP-19 default EVM coin type: the address for every EVM chain without its own record. */
+export const DEFAULT_EVM_COIN_TYPE = 0x80000000n;
+
 /** ENS coin type for a CAIP-2 network, or null when this draft defines none. */
 export function coinTypeFor(network: string): bigint | null {
+  if (network === SOLANA_MAINNET) return SOLANA_COIN_TYPE;
   const m = /^eip155:(\d+)$/.exec(network);
   return m ? toCoinType(Number(m[1])) : null;
+}
+
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+function base58(bytes: Uint8Array): string {
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) | BigInt(b);
+  let out = "";
+  for (; n > 0n; n /= 58n) out = B58[Number(n % 58n)] + out;
+  for (const b of bytes) {
+    if (b !== 0) break;
+    out = "1" + out;
+  }
+  return out;
+}
+
+/**
+ * An address record's value in the form `payTo` takes on `network`, or null
+ * when it is not a valid account there. Readers return the record's raw bytes
+ * as hex for any coin type; an EVM address may also come back checksummed.
+ */
+function recordAccount(network: string, value: string): string | null {
+  if (network === SOLANA_MAINNET) {
+    if (!isHex(value)) return null;
+    const bytes = hexToBytes(value);
+    return bytes.length === 32 ? base58(bytes) : null;
+  }
+  return value;
 }
 
 function sameAccount(network: string, a: string, b: string): boolean {
@@ -190,7 +226,8 @@ export async function verifyPayee(
 
   // 5. Payee, per accept.
   return pr.accepts.map((accept, i): PayeeVerdict => {
-    const primary = resolved.addrs.get(accept.network);
+    const record = resolved.addrs.get(accept.network);
+    const primary = record ? recordAccount(accept.network, record) : null;
     if (primary && sameAccount(accept.network, primary, accept.payTo)) {
       return { verdict: true, reason: "payee-bound", accepts_index: i, matched_by: "addr", ...common, checked_at };
     }
@@ -218,7 +255,9 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
   const secondLevel = path[path.length - 1];
   const subnames = path.slice(0, -1);
 
-  const [now, originsRaw, paytoRaw, addrEntries, secondLevelExpiry, subnameData, extendedResolver] =
+  const anyEvm = networks.some((n) => n.startsWith("eip155:"));
+
+  const [now, originsRaw, paytoRaw, addrEntries, defaultEvm, secondLevelExpiry, subnameData, extendedResolver] =
     await Promise.all([
       read(() => reader.now()),
       read(() => reader.text(name, ORIGINS_KEY)),
@@ -230,6 +269,7 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
           return [network, value] as const;
         }),
       ),
+      anyEvm ? read(() => reader.addr(name, DEFAULT_EVM_COIN_TYPE)) : null,
       read(() => reader.nameExpires(labels[labels.length - 2])),
       Promise.all(
         subnames.map(async (node) => {
@@ -273,7 +313,12 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
     now,
     origins: splitList(originsRaw),
     payto: splitList(paytoRaw),
-    addrs: new Map(addrEntries),
+    // ENSIP-19: an EVM chain with no address of its own takes the default
+    // address. Most deployed resolvers, ENS's own PublicResolver included,
+    // don't apply this, so the verifier does.
+    addrs: new Map(
+      addrEntries.map(([network, value]) => [network, value ?? (network.startsWith("eip155:") ? defaultEvm : null)] as const),
+    ),
     expiry: { at, grace },
     parentCanControl,
     extendedResolver,

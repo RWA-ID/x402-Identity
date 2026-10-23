@@ -139,3 +139,77 @@ test("a failed resolver probe does not sink the verdict", async () => {
   assert.equal(v.verdict, true);
   assert.equal(v.extended_resolver, "unknown");
 });
+
+const SOL = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+const SOL_PAY = "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn";
+const SOL_BYTES = "0x49d1f17f96773e0394b5fc9733a877640702059a92e3add52b832835d6c1d5b1";
+const DEFAULT_EVM = 2147483648n;
+const POLYGON_COIN = 2147483785n;
+
+test("Solana bound by its address record (coin type 501, raw bytes)", async () => {
+  const [v] = await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, reader({ addrs: { 501n: SOL_BYTES } }));
+  assert.equal(v.verdict, true);
+  assert.equal(v.matched_by, "addr");
+});
+
+test("Solana key with leading zero bytes encodes with leading 1s", async () => {
+  const bytes = "0x0000" + "07".repeat(30);
+  const [v] = await verifyPayee(
+    challenge(undefined, [{ network: SOL, payTo: "112QftUJC9yYkE7xr4ikuFmaHKhLCxkpK5RL1J2QqC2" }]),
+    ORIGIN,
+    reader({ addrs: { 501n: bytes } }),
+  );
+  assert.equal(v.verdict, true);
+});
+
+test("Solana record that isn't 32 bytes never matches", async () => {
+  const [v] = await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, reader({ addrs: { 501n: SOL_BYTES.slice(0, -2) } }));
+  assert.equal(v.verdict, false);
+  assert.equal(v.reason, "payto-not-listed");
+});
+
+test("Solana in org.x402.payto still binds", async () => {
+  const texts = { "org.x402.origins": ORIGIN, "org.x402.payto": `${SOL}:${SOL_PAY}` };
+  const [v] = await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, reader({ texts, addrs: {} }));
+  assert.equal(v.verdict, true);
+  assert.equal(v.matched_by, "org.x402.payto");
+});
+
+test("default EVM address binds a chain with no record of its own (ENSIP-19)", async () => {
+  const pr = challenge(undefined, [
+    { network: "eip155:137", payTo: PAY },
+    { network: "eip155:4663", payTo: PAY },
+    { network: "eip155:1", payTo: PAY },
+  ]);
+  const verdicts = await verifyPayee(pr, ORIGIN, reader({ addrs: { [DEFAULT_EVM]: PAY.toLowerCase() } }));
+  assert.deepEqual(verdicts.map((v) => [v.verdict, v.matched_by]), [[true, "addr"], [true, "addr"], [true, "addr"]]);
+});
+
+test("a chain's own record overrides the default, so the default can't widen it", async () => {
+  const pr = challenge(undefined, [{ network: "eip155:137", payTo: PAY }]);
+  const [v] = await verifyPayee(pr, ORIGIN, reader({ addrs: { [DEFAULT_EVM]: PAY, [POLYGON_COIN]: OTHER } }));
+  assert.equal(v.verdict, false);
+  assert.equal(v.reason, "payto-not-listed");
+});
+
+test("the default EVM address never binds a non-EVM accept", async () => {
+  const [v] = await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, reader({ addrs: { [DEFAULT_EVM]: PAY } }));
+  assert.equal(v.verdict, false);
+});
+
+test("no EVM accept → the default record is not read", async () => {
+  const seen = [];
+  const r = reader({ addrs: { 501n: SOL_BYTES } });
+  const addr = r.addr;
+  r.addr = (n, ct) => (seen.push(ct), addr(n, ct));
+  await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, r);
+  assert.deepEqual(seen, [501n]);
+});
+
+test("a failed read of the default record is inconclusive", async () => {
+  const r = reader();
+  r.addr = (_n, ct) => (ct === DEFAULT_EVM ? Promise.reject(new Error("throttled")) : Promise.resolve(PAY));
+  const [v] = await verifyPayee(challenge(), ORIGIN, r);
+  assert.equal(v.verdict, "inconclusive");
+  assert.equal(v.reason, "resolution-failed");
+});
