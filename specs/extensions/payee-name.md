@@ -120,6 +120,8 @@ The `org.x402.*` key names follow the ENSIP-5 reverse-DNS convention for service
 | `eip155:<chainId>`, chainId ≠ 1 | `0x80000000 \| chainId` (ENSIP-11), e.g. Base `eip155:8453` → `2147492101` |
 | any other namespace | not mapped by this draft; use `org.x402.payto` |
 
+**Bitcoin Lightning.** Under the `exact` scheme on `lnbtc`, `payTo` is the receiver node's compressed secp256k1 public key (66 lowercase hex characters), not an on-chain Bitcoin address. A `bip122` address record (coin type `0`) therefore never authorizes it. List the node key on `org.x402.payto`, e.g. `lnbtc:000000000019d6689c085ae165831e93:03c913…9a80` in full. This binding matters most for Lightning: the facilitator checks only that the invoice signer equals `payTo`, and the server chooses `payTo` itself, so the name is the operator's statement that the node is theirs.
+
 Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-Read). In that case the authority is whichever signer the name's owner configured on its resolver. That is still an owner decision, but the records then sit outside Ethereum state. From outside, a verifier can only tell that a resolver *can* serve records off-chain, so it reports `extended_resolver: true` when the resolver implements ENSIP-10 and does not claim more.
 
 ---

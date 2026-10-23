@@ -97,7 +97,15 @@ const NETWORKS: Record<string, string> = {
   "eip155:10": "Optimism",
   "eip155:42161": "Arbitrum",
   "eip155:137": "Polygon",
+  "eip155:56": "BNB Chain",
+  "eip155:143": "Monad",
+  "eip155:196": "X Layer",
+  "eip155:480": "World Chain",
+  "eip155:999": "HyperEVM",
+  "eip155:4663": "Robinhood Chain",
+  "eip155:43114": "Avalanche",
   "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": "Solana",
+  "lnbtc:000000000019d6689c085ae165831e93": "Bitcoin Lightning",
 };
 
 export function networkLabel(network: string): string {

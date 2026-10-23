@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAccount, usePublicClient } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { useAppKit } from "@reown/appkit/react";
-import { getAddress, isAddress, type PublicClient } from "viem";
+import { getAddress, type PublicClient } from "viem";
 import { normalize } from "viem/ens";
 import { planPayeeRecords, readPayeeRecords, originOf, type PayeePlan } from "@x402identity/widget-core";
 import { verifyPayee, viemReader, type PayeeVerdict } from "@x402identity/payee";
@@ -13,6 +13,7 @@ import { BackgroundX } from "@/components/HeroX";
 import { useOwnedNames, holdsName } from "@/hooks/useOwnedNames";
 import { useWritePayee } from "@/hooks/useWritePayee";
 import { readChallenge, readManifest, networkLabel, shortAddr, type Challenge, type Manifest } from "@/lib/challenge";
+import { LIGHTNING_MAINNET, SOLANA_MAINNET, normalizePayTo, payToPlaceholder } from "@/lib/payto";
 
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"];
 const STEPS = ["Choose names", "Link endpoints", "Verify"] as const;
@@ -59,8 +60,9 @@ function planFor(ep: Endpoint, keep: string[]): PayeePlan | null {
   if (!origin) return null;
   const origins = [...keep, origin];
   if (c?.readable && c.accepts?.length) return planPayeeRecords(origins, c.accepts);
-  if (!isAddress(ep.manual.payTo)) return null;
-  return planPayeeRecords(origins, [{ network: ep.manual.network, payTo: ep.manual.payTo }]);
+  const payTo = normalizePayTo(ep.manual.network, ep.manual.payTo);
+  if (!payTo) return null;
+  return planPayeeRecords(origins, [{ network: ep.manual.network, payTo }]);
 }
 
 /** Origins the name lists now, minus the ones the user removed. */
@@ -515,10 +517,12 @@ extensions: {
                           >
                             <option value="eip155:8453">Base</option>
                             <option value="eip155:1">Ethereum</option>
+                            <option value={SOLANA_MAINNET}>Solana</option>
+                            <option value={LIGHTNING_MAINNET}>Bitcoin Lightning</option>
                           </select>
                           <input
                             className="label-input"
-                            placeholder="0x… payout address"
+                            placeholder={payToPlaceholder(e.manual.network)}
                             value={e.manual.payTo}
                             onChange={(ev) => patch(name, { manual: { ...e.manual, payTo: ev.target.value.trim() } })}
                           />
@@ -547,7 +551,13 @@ extensions: {
                           ))}
                           <tr>
                             <td className="mono">org.x402.payto</td>
-                            <td className="mono">{cur === "failed" ? "?" : cur ? cur.payto || "—" : "…"}</td>
+                            <td className="mono">
+                              {cur === "failed"
+                                ? "?"
+                                : cur
+                                  ? cur.payto.split(/\s+/).filter(Boolean).map((p) => shortAddr(p.split(":").pop()!)).join(" ") || "—"
+                                  : "…"}
+                            </td>
                             <td className="mono">{plan.payto.map((p) => shortAddr(p.split(":").pop()!)).join(" ") || "— (cleared)"}</td>
                           </tr>
                         </tbody>
