@@ -27,7 +27,7 @@ With no configuration the server runs in **prepare-only** mode: read tools query
 | `get_price` | Total ETH cost for 1–10 mints (protocol fee + optional platform fee) |
 | `register_subname` | Mint one subname — prepares or signs (see modes) |
 | `batch_register` | Mint up to 10 names in one transaction |
-| `resolve_identity` | ENS name → address, owner, text records |
+| `resolve_identity` | ENS name → Ethereum/Base/Solana addresses (ENSIP-19 default EVM fallback), owner, text records |
 | `list_names` | All x402 names minted by an address (on-chain events) |
 | `verify_payee` | Before paying an x402 URL, check that its `payee-name` ENS name authorizes the origin and `payTo` |
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getAddress, namehash, zeroAddress } from "viem";
+import { getAddress, hexToBytes, isHex, namehash, zeroAddress } from "viem";
 import { normalize, toCoinType } from "viem/ens";
 import { base } from "viem/chains";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -18,13 +18,38 @@ import { jsonResult, errorResult } from "../result.js";
 
 const TEXT_KEYS = ["description", "url", "avatar", "com.twitter", "com.github"] as const;
 
+/** SLIP-44 coin type of Solana (ENSIP-9). Its address record holds the 32-byte public key. */
+const SOLANA_COIN_TYPE = 501n;
+/** ENSIP-19 default EVM coin type: the address for every EVM chain without its own record. */
+const DEFAULT_EVM_COIN_TYPE = 0x80000000n;
+
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+/** A Solana address record's raw bytes as a base58 public key, or null when it isn't 32 bytes. */
+function solanaKey(value: string): string | null {
+  if (!isHex(value)) return null;
+  const bytes = hexToBytes(value);
+  if (bytes.length !== 32) return null;
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) | BigInt(b);
+  let out = "";
+  for (; n > 0n; n /= 58n) out = B58[Number(n % 58n)] + out;
+  for (const b of bytes) {
+    if (b !== 0) break;
+    out = "1" + out;
+  }
+  return out;
+}
+
 export function registerIdentityTools(server: McpServer, ctx: Ctx) {
   server.registerTool(
     "resolve_identity",
     {
       description:
-        "Resolve an ENS name (e.g. myagent.402bot.eth) to its Ethereum and Base addresses, " +
+        "Resolve an ENS name (e.g. myagent.402bot.eth) to its Ethereum, Base and Solana addresses, " +
         "current owner, and common text records (description, url, avatar, socials). " +
+        "`addresses.defaultEvm` is the ENSIP-19 address for any EVM chain without its own record; " +
+        "`addresses.base` falls back to it and `addresses.baseSource` says which applied. " +
         "Fields that could not be read are listed under `errors` instead of reading as empty.",
       inputSchema: {
         name: z.string().describe("Full ENS name, e.g. 'myagent.402bot.eth'"),
@@ -46,6 +71,11 @@ export function registerIdentityTools(server: McpServer, ctx: Ctx) {
         address: () => ctx.publicClient.getEnsAddress({ name: normalized }),
         baseAddress: () =>
           ctx.publicClient.getEnsAddress({ name: normalized, coinType: toCoinType(base.id) }),
+        defaultEvm: () =>
+          ctx.publicClient.getEnsAddress({ name: normalized, coinType: DEFAULT_EVM_COIN_TYPE }),
+        // Non-EVM records come back as raw bytes (hex).
+        solana: () =>
+          ctx.publicClient.getEnsAddress({ name: normalized, coinType: SOLANA_COIN_TYPE }),
         owner: () =>
           ctx.publicClient.readContract({
             address: NAME_WRAPPER,
@@ -84,6 +114,11 @@ export function registerIdentityTools(server: McpServer, ctx: Ctx) {
         );
       }
 
+      const solana = value.solana ? solanaKey(value.solana) : null;
+      if (value.solana && !solana) errors.solana = "Solana record is not a 32-byte public key";
+      const defaultEvm = value.defaultEvm ? getAddress(value.defaultEvm) : null;
+      const baseSource = value.baseAddress ? "base" : defaultEvm ? "default-evm" : null;
+
       const registered = Boolean(owner || value.address);
       // A failed read leaves a field unknown, so "not registered" is only
       // claimed when both the owner and address reads actually answered.
@@ -96,7 +131,10 @@ export function registerIdentityTools(server: McpServer, ctx: Ctx) {
         address: value.address ?? null,
         addresses: {
           ethereum: value.address ?? null,
-          base: value.baseAddress ? getAddress(value.baseAddress) : null,
+          base: value.baseAddress ? getAddress(value.baseAddress) : defaultEvm,
+          baseSource,
+          solana,
+          defaultEvm,
         },
         owner,
         records,
