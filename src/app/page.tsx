@@ -461,14 +461,14 @@ export default function Home() {
           <div className="payee-grid">
             <div className="code-card">
               <div className="code-head">
-                <span className="title">verdict · api.x402id.dev · 2026-10-20</span>
+                <span className="title">verdict · api.x402id.dev · 2026-10-25</span>
               </div>
               <div className="code-body">
                 <pre>
 {"{"}
 {"\n"}  <span className="n">&quot;verdict&quot;</span>: <span className="k">true</span>,
 {"\n"}  <span className="n">&quot;reason&quot;</span>: <span className="s">&quot;payee-bound&quot;</span>,
-{"\n"}  <span className="n">&quot;name&quot;</span>: <span className="s">&quot;test.402api.eth&quot;</span>,
+{"\n"}  <span className="n">&quot;name&quot;</span>: <span className="s">&quot;x402id.402api.eth&quot;</span>,
 {"\n"}  <span className="n">&quot;matched_by&quot;</span>: <span className="s">&quot;addr&quot;</span>,
 {"\n"}  <span className="n">&quot;parent_can_control&quot;</span>: <span className="k">false</span>,
 {"\n"}  <span className="n">&quot;expires_at&quot;</span>: <span className="s">&quot;2038-02-14T12:17:23Z&quot;</span>
@@ -480,7 +480,7 @@ export default function Home() {
             <div className="fuse-list" style={{ marginTop: 0 }}>
               <div className="fuse-row">
                 <div className="k">LIVE</div>
-                <div className="v">Our own paid endpoint, api.x402id.dev, verifies as payee-bound through test.402api.eth.</div>
+                <div className="v">Our own paid endpoint, api.x402id.dev, verifies as payee-bound through x402id.402api.eth.</div>
               </div>
               <div className="fuse-row">
                 <div className="k">BAZAAR</div>

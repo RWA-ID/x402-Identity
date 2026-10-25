@@ -43,7 +43,7 @@
       "name": "ENS",
       "version": "v1",
       "endpoint": "x402id.402api.eth",
-      "description": "Verified payee (payee-name): ETH and Base address = agentWallet, org.x402.origins = both availability hostnames. Check at https://x402id.dev/verify/. Listed last: 8004scan keeps the last ENS entry."
+      "description": "Verified payee (payee-name): ETH and Base address = agentWallet, org.x402.origins = both availability hostnames. Check at https://x402id.dev/verify/."
     },
     {
       "name": "registrar-contract",

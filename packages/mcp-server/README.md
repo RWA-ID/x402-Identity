@@ -38,7 +38,7 @@ With no configuration the server runs in **prepare-only** mode: read tools query
 ```json
 {
   "origin": "https://x402id-availability.dmpay.workers.dev",
-  "payeeName": "test.402api.eth",
+  "payeeName": "x402id.402api.eth",
   "verdicts": [{ "verdict": true, "reason": "payee-bound", "matched_by": "addr", "parent_can_control": false }]
 }
 ```
