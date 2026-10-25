@@ -187,7 +187,7 @@ GET https://x402id-availability.dmpay.workers.dev/v1/availability/:name    # sam
 
 It costs **$0.001 USDC on Base** (x402), paid to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C), and returns `available`, the live mint fee and a link to register here. It's there for discovery: someone browsing the marketplace asks their agent to check a name, and the answer sends them to the site. A malformed name or a failed chain read is never charged.
 
-Its 402 declares `payee-name: test.402api.eth`, the live reference instance for [Verified Payee](#verified-payee-payee-name). The same worker serves two free routes:
+Its 402 declares `payee-name: x402id.402api.eth`, the live reference instance for [Verified Payee](#verified-payee-payee-name). The same worker serves two free routes:
 
 | Route | Purpose |
 |-------|---------|

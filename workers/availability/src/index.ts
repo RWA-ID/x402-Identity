@@ -55,7 +55,7 @@ const CDP_FACILITATOR = "https://api.cdp.coinbase.com/platform/v2/x402";
 // ENS name that authorizes this origin and PAY_TO (specs/extensions/payee-name.md).
 // Its records: org.x402.origins = this worker's origin, Base address = PAY_TO.
 // Change either here and the records must change with it.
-const PAYEE_NAME = "test.402api.eth";
+const PAYEE_NAME = "x402id.402api.eth";
 // Hostnames bound to this worker (wrangler.jsonc).
 const SELF_HOSTS = ["api.x402id.dev", "x402id-availability.dmpay.workers.dev"];
 
@@ -200,7 +200,7 @@ app.get("/", (c) =>
 app.get("/.well-known/agent-registration.json", (c) => c.json(agentRegistration));
 
 // Free — x402 host manifest (x402#2979), served from whichever bound hostname
-// was asked, since its resource URLs must be on that origin. test.402api.eth's
+// was asked, since its resource URLs must be on that origin. PAYEE_NAME's
 // org.x402.origins lists both hostnames, so the payee pointer holds on either.
 app.get("/.well-known/x402", (c) => {
   const test = c.env.TEST_FACILITATOR_URL;

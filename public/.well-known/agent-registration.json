@@ -1,18 +1,24 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "x402 Identity Hub",
-  "description": "Paid name-availability check for x402 Identity Hub: ENS identity names for AI agents, APIs and MCP servers under 402bot.eth, 402api.eth and 402mcp.eth. GET /v1/availability/:name (e.g. mybot.402bot.eth) costs $0.001 USDC on Base via x402 and returns whether the name is free, the live mint fee and where to register it at x402id.eth.limo.",
+  "description": "Paid name-availability check for x402 Identity Hub: ENS identity names for AI agents, APIs and MCP servers under 402bot.eth, 402api.eth and 402mcp.eth. GET /v1/availability/:name (e.g. mybot.402bot.eth) costs $0.001 USDC on Base via x402 and returns whether the name is free, the live mint fee and where to register it at x402id.dev. Its 402 declares payee-name x402id.402api.eth, whose records bind this origin to the payTo Safe.",
   "image": "ipfs://bafkreibw2rpmv4j4dlaate2qd2xzkxyha72y7xjvje2qk2fi3el6y7fdqa",
   "services": [
     {
       "name": "web",
-      "endpoint": "https://x402id.eth.limo/"
+      "endpoint": "https://x402id.dev/"
+    },
+    {
+      "name": "availability",
+      "version": "v1",
+      "endpoint": "https://api.x402id.dev/v1/availability/:name",
+      "description": "GET, x402 exact scheme: $0.001 USDC on Base (eip155:8453). Returns { name, available, mintFee, registerUrl, message }."
     },
     {
       "name": "availability",
       "version": "v1",
       "endpoint": "https://x402id-availability.dmpay.workers.dev/v1/availability/:name",
-      "description": "GET, x402 exact scheme: $0.001 USDC on Base (eip155:8453). Returns { name, available, mintFee, registerUrl, message }."
+      "description": "Same worker as api.x402id.dev, on its workers.dev hostname."
     },
     {
       "name": "agentWallet",
@@ -32,6 +38,12 @@
       "name": "ENS",
       "version": "v1",
       "endpoint": "402mcp.eth"
+    },
+    {
+      "name": "ENS",
+      "version": "v1",
+      "endpoint": "x402id.402api.eth",
+      "description": "Verified payee (payee-name): ETH and Base address = agentWallet, org.x402.origins = both availability hostnames. Check at https://x402id.dev/verify/. Listed last: 8004scan keeps the last ENS entry."
     },
     {
       "name": "registrar-contract",
