@@ -413,7 +413,19 @@ Parents are renewed from **$X402ID trading fees**, which accrue in WETH to the x
 | Liquidity | 85% in a Uniswap v4 pool paired with WETH |
 | Treasury | 15% vesting over 1 year (30-day cliff) to the x402 Safe [`0x8E61…631C`](https://app.safe.global/home?safe=base:0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C) (2-of-3) |
 | Trading fees | 0.665% of volume to the Safe in WETH |
-| Mint cashback | 25% of the mint fee back in $X402ID for every name registered since launch; claimable on Base in monthly rounds from 2026-10-26 |
+| Mint cashback | 25% of the mint fee back in $X402ID for every name registered since launch, sent by the Safe on Base in monthly rounds from 2026-10-26 (nothing to claim) |
+
+### Cashback rounds
+
+Each round is built by `scripts/cashback/round.mjs` and paid as one Safe batch. Its record, with every mint, the price and the calldata, is in [`scripts/cashback/rounds/`](scripts/cashback/rounds/). Team wallets (the deployer, the Safe and its owners) are excluded. Amounts are valued at the mean daily X402ID/WETH close across the round.
+
+**Round 1** (2026-09-26 → 2026-10-26), paid 2026-10-26 in [`0x7f656ed0…ed96`](https://basescan.org/tx/0x7f656ed03e24f2431b4f293d0670dda831c7e148e338cdebf07b8765c343ed96), the same batch that released the first 1,233,170,662 X402ID from vesting at the cliff:
+
+| Recipient | For | Fee paid | X402ID |
+|---|---|---|---|
+| [`0xfA6b24f09F51C49aB35ce49a40058b14eaaD3869`](https://basescan.org/address/0xfA6b24f09F51C49aB35ce49a40058b14eaaD3869) | `eac.402bot.eth`, `888.402bot.eth` | 2 × 0.0015 ETH | 9,195,728 |
+| [`0x866F5DA24591B2401F04C1F3Dd0cBc799Bb52fdf`](https://basescan.org/address/0x866F5DA24591B2401F04C1F3Dd0cBc799Bb52fdf) | Genesis: first outside minter, before launch | 0.01 ETH | 30,652,429 |
+| **Total** | | | **39,848,157** |
 
 The site's swap panel quotes through `workers/swap/`, a Cloudflare Worker that holds the 0x API key and pins every quote to ETH ↔ X402ID on Base with a 0.10% fee to the Safe.
 
