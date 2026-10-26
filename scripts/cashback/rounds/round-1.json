@@ -1,0 +1,91 @@
+{
+  "round": 1,
+  "startTime": "2026-09-26T20:22:00Z",
+  "endTime": "2026-10-26T20:22:39Z",
+  "fromBlock": 26063986,
+  "toBlock": 26279226,
+  "cashbackBps": 2500,
+  "price": {
+    "ethPerToken": 8.155960290977305e-11,
+    "source": "geckoterminal 0x49369bb5411ef56cdf8469bc532be5aae84cb2a24df83e38cbe411185eee1c5c",
+    "days": 20
+  },
+  "cap": "250000000000000000000000000",
+  "scaledToCap": false,
+  "excluded": [
+    "0x5f11a48230f7CdaB91A2361576239091E4b1165b",
+    "0xaEc1Ed0559aFaCC5e46f66Ce77010A017A557754",
+    "0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C",
+    "0x645Cf432E829f9dEF6EB8E3974D3Aee4580CBCdd",
+    "0x2D037f66b9e0EDE90c2080558a7d3FF7BE36E9A1",
+    "0x0104c88Ea4f55c26df89F5cd3eC62F3C8288D69b"
+  ],
+  "genesis": {
+    "address": "0x866F5DA24591B2401F04C1F3Dd0cBc799Bb52fdf",
+    "preLaunchFeeWei": "10000000000000000"
+  },
+  "mints": [
+    {
+      "tx": "0xe4ef35dafb0c019f09ea4975040de1002043ccaf6e86cb4490762aaed8fdfb51",
+      "registrar": "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633",
+      "label": "eac",
+      "parentNode": "0x6e4b9183746cc99e9c33b6d8b9c9dc681400bedb29eeaf4ade1f1df78f52e130",
+      "buyer": "0xfA6b24f09F51C49aB35ce49a40058b14eaaD3869",
+      "feeWei": "1500000000000000",
+      "eligible": true
+    },
+    {
+      "tx": "0x6fdc1575f61d77be0afe7bef16501b0aac296f2088d9b31e913c0c88fb8b9bf2",
+      "registrar": "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633",
+      "label": "888",
+      "parentNode": "0x6e4b9183746cc99e9c33b6d8b9c9dc681400bedb29eeaf4ade1f1df78f52e130",
+      "buyer": "0xfA6b24f09F51C49aB35ce49a40058b14eaaD3869",
+      "feeWei": "1500000000000000",
+      "eligible": true
+    },
+    {
+      "tx": "0xf95f0d1bafc77ad95f04335aff7fb71e3de0efc15baf02afbfc8faf1153e8ba5",
+      "registrar": "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633",
+      "label": "test",
+      "parentNode": "0x602d4d8c84c8fae65416521bc38eb4f6b294e1e8032eb39be8ace8e659e43bcc",
+      "buyer": "0x5f11a48230f7CdaB91A2361576239091E4b1165b",
+      "feeWei": "1500000000000000",
+      "eligible": false
+    },
+    {
+      "tx": "0xf2385748280fab28d47dc35c7861b870e2a35c522c8803a284efa3cb60f9578f",
+      "registrar": "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633",
+      "label": "payouttest",
+      "parentNode": "0x6e4b9183746cc99e9c33b6d8b9c9dc681400bedb29eeaf4ade1f1df78f52e130",
+      "buyer": "0x5f11a48230f7CdaB91A2361576239091E4b1165b",
+      "feeWei": "1500000000000000",
+      "eligible": false
+    }
+  ],
+  "payouts": [
+    {
+      "address": "0xfA6b24f09F51C49aB35ce49a40058b14eaaD3869",
+      "owedWei": "750000000000000",
+      "tokens": "9195728000000000000000000"
+    },
+    {
+      "address": "0x866F5DA24591B2401F04C1F3Dd0cBc799Bb52fdf",
+      "owedWei": "2500000000000000",
+      "tokens": "30652429000000000000000000"
+    }
+  ],
+  "totalTokens": "39848157000000000000000000",
+  "safe": "0x8E61630A73a38B5A1b7AE8dAA8AeAD364403631C",
+  "token": "0xb9490fc272642A7De0539FB3dC52A2769936FBa3",
+  "calldata": [
+    "0x37bdc99b0000000000000000000000000000000000000000000000000000000000000000",
+    "0xa9059cbb000000000000000000000000fa6b24f09f51c49ab35ce49a40058b14eaad3869000000000000000000000000000000000000000000079b4569ec20f741400000",
+    "0xa9059cbb000000000000000000000000866f5da24591b2401f04c1f3dd0cbc799bb52fdf000000000000000000000000000000000000000000195ae78174c2db60140000"
+  ],
+  "executed": {
+    "chainId": 8453,
+    "tx": "0x7f656ed03e24f2431b4f293d0670dda831c7e148e338cdebf07b8765c343ed96",
+    "block": 53128715,
+    "released": "1233170662100456621004566210"
+  }
+}
