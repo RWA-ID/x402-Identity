@@ -6,10 +6,8 @@ import {
   encodeFunctionData,
   getAddress,
   namehash,
-  toHex,
   zeroAddress,
 } from "viem";
-import { packetToBytes } from "viem/ens";
 
 /**
  * Minting a subname sets its owner and resolver but writes NO address record,
@@ -18,10 +16,15 @@ import { packetToBytes } from "viem/ens";
  */
 
 /**
- * ENS's canonical resolution entry point — a DAO-owned proxy that will be
- * upgraded for ENSv2, so finding resolvers through it survives the migration.
+ * ENS's canonical resolution entry point, a DAO-owned proxy. Since ENSv2 its
+ * `findResolver` returns the ENSV1Resolver wrapper for every v1 name, not the
+ * resolver records are written to, so writes look the resolver up in the
+ * registry instead (`getResolver`).
  */
 export const UNIVERSAL_RESOLVER: Address = "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe";
+
+/** The ENSv1 registry. Names under 402bot.eth / 402api.eth / 402mcp.eth live here. */
+export const ENS_REGISTRY: Address = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 
 /** ENSIP-11 coin type for Ethereum mainnet. */
 export const ETH_COIN_TYPE = 60n;
@@ -46,6 +49,16 @@ export const universalResolverAbi = [
       { name: "node", type: "bytes32" },
       { name: "offset", type: "uint256" },
     ],
+  },
+] as const;
+
+export const ensRegistryAbi = [
+  {
+    type: "function",
+    name: "resolver",
+    stateMutability: "view",
+    inputs: [{ name: "node", type: "bytes32" }],
+    outputs: [{ type: "address" }],
   },
 ] as const;
 
@@ -107,20 +120,21 @@ function bytesToAddress(b: Hex): Address | null {
 }
 
 /**
- * The resolver configured for `name` itself, looked up at call time through the
- * Universal Resolver — never hardcoded or cached (ENSv2 resolvers are per
- * account and change with ownership). Throws if the name has no resolver of its
- * own: an inherited parent resolver would reject the holder's writes.
+ * The resolver configured for `name` itself in the ENS registry, looked up at
+ * call time — never hardcoded or cached, since a name's resolver can change.
+ * These are unmigrated ENSv1 names, so the registry entry is the resolver their
+ * records are read from and written to. Throws if the name has no resolver of
+ * its own: an inherited parent resolver would reject the holder's writes.
  */
 export async function getResolver(publicClient: PublicClient, name: string): Promise<Address> {
-  const [resolver, , offset] = (await publicClient.readContract({
-    address: UNIVERSAL_RESOLVER,
-    abi: universalResolverAbi,
-    functionName: "findResolver",
-    args: [toHex(packetToBytes(name))],
-  })) as readonly [Address, Hex, bigint];
-  if (resolver === zeroAddress || offset !== 0n) throw new Error(`${name} has no resolver of its own`);
-  return resolver;
+  const resolver = await publicClient.readContract({
+    address: ENS_REGISTRY,
+    abi: ensRegistryAbi,
+    functionName: "resolver",
+    args: [namehash(name)],
+  });
+  if (resolver === zeroAddress) throw new Error(`${name} has no resolver of its own`);
+  return getAddress(resolver);
 }
 
 /**

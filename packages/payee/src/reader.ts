@@ -42,6 +42,13 @@ const registryAbi = [
     inputs: [{ name: "node", type: "bytes32" }],
     outputs: [{ type: "address" }],
   },
+  {
+    type: "function",
+    name: "resolver",
+    stateMutability: "view",
+    inputs: [{ name: "node", type: "bytes32" }],
+    outputs: [{ type: "address" }],
+  },
 ] as const;
 
 const nameWrapperAbi = [
@@ -114,8 +121,23 @@ export function viemReader(client: PublicClient): EnsReader {
         args: [BigInt(labelhash(label))],
       }),
     async extendedResolver(name) {
-      const resolver = await client.getEnsResolver({ name });
-      if (!resolver || resolver === zeroAddress) return false;
+      // Since ENSv2 the Universal Resolver (and so getEnsResolver) reports the
+      // ENSV1Resolver wrapper for every v1 name, and the wrapper is extended.
+      // For a v1 name, take the resolver ENSIP-10 would use: the nearest one set
+      // in the registry on the name or an ancestor, up to the second-level name.
+      const labels = name.split(".");
+      let resolver: Address = zeroAddress;
+      for (let i = 0; i < labels.length - 1 && resolver === zeroAddress; i++) {
+        resolver = await client.readContract({
+          address: ENS_REGISTRY,
+          abi: registryAbi,
+          functionName: "resolver",
+          args: [namehash(labels.slice(i).join("."))],
+        });
+      }
+      // Not in the v1 registry at all: an ENSv2 name, whose resolver the library finds.
+      if (resolver === zeroAddress) resolver = (await client.getEnsResolver({ name })) ?? zeroAddress;
+      if (resolver === zeroAddress) return false;
       return client
         .readContract({
           address: resolver,

@@ -9,7 +9,7 @@ import { registerPayeeTool } from "./tools/payee.js";
 export function buildServer(ctx: Ctx): McpServer {
   const server = new McpServer({
     name: "x402-identity-hub",
-    version: "0.3.1",
+    version: "0.3.2",
   });
 
   registerAvailabilityTool(server, ctx);
