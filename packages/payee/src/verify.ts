@@ -245,12 +245,21 @@ export async function verifyPayee(
     if (inList) {
       return { verdict: true, reason: "payee-bound", accepts_index: i, matched_by: PAYTO_KEY, ...common, checked_at };
     }
+    // A name that lists no payee at all for this network has said nothing
+    // about it. Same verdict, but say so, so a client can tell it apart from
+    // a payTo the name's own list leaves out.
+    const listsNetwork = Boolean(record) || resolved.payto.some((entry) => {
+      const cut = entry.lastIndexOf(":");
+      return cut > 0 && entry.slice(0, cut) === accept.network;
+    });
     return {
       verdict: false,
       reason: "payto-not-listed",
       accepts_index: i,
       ...common,
-      detail: { field: "payTo", expected: `listed for ${accept.network}`, got: accept.payTo },
+      detail: listsNetwork
+        ? { field: "payTo", expected: `listed for ${accept.network}`, got: accept.payTo }
+        : { field: "network", expected: `a payee listed for ${accept.network}`, got: "none listed" },
       checked_at,
     };
   });

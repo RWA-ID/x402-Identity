@@ -146,7 +146,7 @@ Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-
 
    A second-level name with no expiry on record (`available`, and `nameExpires` is 0) is not registered at all. The verdict is still `false`, `name-expired`, but `detail` SHOULD say so (`{"field": "<name>.eth", "expected": "registered", "got": "not registered"}`), so that a mistyped name can be told apart from one that lapsed.
 4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402. Listing an origin is an authorization by the name's owner, not a claim to control the host's DNS, so a tenant on a platform suffix can list its tenant origin. A verifier checks only `O` and never contacts the other listed origins, so an origin the operator has stopped serving cannot make a challenge fail.
-5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` (for an `eip155` network with no record of its own, the default EVM address) or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization; every other account compares exactly. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
+5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` (for an `eip155` network with no record of its own, the default EVM address) or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization; every other account compares exactly. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`. When the name lists no payee at all for that network (no address record, no default EVM address for an `eip155` network, and no `org.x402.payto` entry for it), the verdict is the same, but `detail` SHOULD say so (`{"field": "network", "expected": "a payee listed for <network>", "got": "none listed"}`), so that a `payTo` the name's list leaves out can be told apart from a network the name says nothing about.
 6. **Pass.** All checks hold for an accept → `true`, `payee-bound`, `accepts_index: i`.
 
 A verdict is per accept, as in the Domain Discovery WG verifier schema: a challenge can carry one authorized `payTo` and one that is not.
@@ -180,12 +180,25 @@ A closed, append-only set, which no release renumbers or reuses:
 | `payee-bound` | `true` | Origin and `payTo` are both listed by an unexpired name. |
 | `name-not-normalized` | `false` | `info.name` is not in ENSIP-15 normalized form. |
 | `origin-not-listed` | `false` | The contacted origin is not in `org.x402.origins`. `detail` carries the origin. |
-| `payto-not-listed` | `false` | The accept's `payTo` is not listed for its network. `detail` carries the network and address. |
+| `payto-not-listed` | `false` | The accept's `payTo` is not listed for its network. `detail` carries the network and address, or says "none listed" when the name lists no payee for that network. |
 | `name-expired` | `false` | The name is past expiry and grace. `detail` says "not registered" when the `.eth` name has no expiry on record. |
 | `name-in-grace` | `inconclusive` | The name is inside the `.eth` grace period. |
 | `no-records` | `inconclusive` | The name resolved and none of the records are set. |
 | `resolution-failed` | `inconclusive` | Resolution did not complete. Never reported as `false`. |
 | `unsupported-name` | `inconclusive` | The name is not under `.eth`, so this draft defines no expiry check for it. |
+
+### Mapping to bound / excluded / inconclusive (wg-identity #42)
+
+#42 proposes three outcomes for any origin-to-payee binding. A verdict here maps onto them per accept, and the `reason` and `detail` stay with it. The payee-name verdicts themselves do not change.
+
+| payee-name result | #42 outcome | Why |
+|---|---|---|
+| `payee-bound` | `bound` | The name's owner listed both the origin and this `payTo`. |
+| `payto-not-listed`, `detail.field` `payTo` | `excluded` | The origin is listed and the name lists payees for this network, so its list is the authorization, and this `payTo` is not on it. |
+| `payto-not-listed`, `detail.got` "none listed" | `inconclusive` | The name lists no payee for this network, so it says nothing about it. |
+| `origin-not-listed` | `inconclusive` | The name made no statement about this origin. The payee-name verdict stays `false`: the server declared a name that never authorized it, so the declaration is false and the name MUST NOT be shown. |
+| `name-in-grace`, `no-records`, `resolution-failed`, `unsupported-name` | `inconclusive` | No usable binding. |
+| `name-not-normalized`, `name-expired` | `inconclusive` | No valid authorization exists to bind or exclude. The payee-name verdict stays `false`. |
 
 ---
 

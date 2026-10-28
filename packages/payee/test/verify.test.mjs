@@ -58,6 +58,29 @@ test("payto listed for another network does not count", async () => {
   const [v] = await verifyPayee(challenge(), ORIGIN, reader({ texts, addrs: {} }));
   assert.equal(v.verdict, false);
   assert.equal(v.reason, "payto-not-listed");
+  assert.deepEqual(v.detail, { field: "network", expected: "a payee listed for eip155:8453", got: "none listed" });
+});
+
+test("a payee listed for the network excludes any other payTo on it", async () => {
+  const texts = { "org.x402.origins": ORIGIN, "org.x402.payto": `eip155:8453:${OTHER}` };
+  const [v] = await verifyPayee(challenge(), ORIGIN, reader({ texts, addrs: {} }));
+  assert.equal(v.verdict, false);
+  assert.equal(v.reason, "payto-not-listed");
+  assert.equal(v.detail.field, "payTo");
+});
+
+test("multi-network: Base bound, Lightning with nothing listed gets its own verdict", async () => {
+  const LN = "lnbtc:000000000019d6689c085ae165831e93";
+  const pr = challenge(undefined, [
+    { network: "eip155:8453", payTo: PAY },
+    { network: LN, payTo: "02" + "ab".repeat(32) },
+  ]);
+  const [base, ln] = await verifyPayee(pr, ORIGIN, reader());
+  assert.equal(base.verdict, true);
+  assert.equal(ln.verdict, false);
+  assert.equal(ln.reason, "payto-not-listed");
+  assert.equal(ln.detail.got, "none listed");
+  assert.equal(ln.accepts_index, 1);
 });
 
 test("verdict is per accept", async () => {
@@ -195,6 +218,7 @@ test("a chain's own record overrides the default, so the default can't widen it"
 test("the default EVM address never binds a non-EVM accept", async () => {
   const [v] = await verifyPayee(challenge(undefined, [{ network: SOL, payTo: SOL_PAY }]), ORIGIN, reader({ addrs: { [DEFAULT_EVM]: PAY } }));
   assert.equal(v.verdict, false);
+  assert.equal(v.detail.got, "none listed");
 });
 
 test("no EVM accept → the default record is not read", async () => {
