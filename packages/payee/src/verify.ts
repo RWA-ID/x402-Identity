@@ -177,6 +177,8 @@ export async function verifyPayee(
     payto: string[];
     addrs: Map<string, string | null>;
     expiry: { at: bigint; grace: bigint };
+    secondLevel: string;
+    registered: boolean;
     parentCanControl: boolean;
     extendedResolver: boolean | "unknown";
   };
@@ -202,7 +204,12 @@ export async function verifyPayee(
   // 3. Expiry. An expired name still resolves and still passes the record
   // checks below, so it is judged first, on chain time.
   if (resolved.now >= resolved.expiry.at + resolved.expiry.grace) {
-    return all({ verdict: false, reason: "name-expired", ...common });
+    // No expiry on record: the .eth name is not registered at all, which a
+    // mistyped name looks like. Same verdict, but say so.
+    const detail = resolved.registered
+      ? undefined
+      : { field: resolved.secondLevel, expected: "registered", got: "not registered" };
+    return all({ verdict: false, reason: "name-expired", ...common, ...(detail && { detail }) });
   }
   if (resolved.now >= resolved.expiry.at) {
     return all({ verdict: "inconclusive", reason: "name-in-grace", ...common });
@@ -325,6 +332,8 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
       addrEntries.map(([network, value]) => [network, value ?? (network.startsWith("eip155:") ? defaultEvm : null)] as const),
     ),
     expiry: { at, grace },
+    secondLevel,
+    registered: secondLevelExpiry.expiry !== 0n,
     parentCanControl,
     extendedResolver,
   };

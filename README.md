@@ -253,7 +253,7 @@ extensions: {
 
 | Package | Use |
 |---------|-----|
-| [`@x402identity/payee`](https://www.npmjs.com/package/@x402identity/payee) 0.3.0 | `verifyPayee(paymentRequired, origin, reader)`: one verdict per payment option, `true` / `false` / `"inconclusive"` with a reason |
+| [`@x402identity/payee`](https://www.npmjs.com/package/@x402identity/payee) 0.3.1 | `verifyPayee(paymentRequired, origin, reader)`: one verdict per payment option, `true` / `false` / `"inconclusive"` with a reason |
 | [`@x402identity/mcp`](https://www.npmjs.com/package/@x402identity/mcp) 0.3.3 | `verify_payee` tool: give it a URL, it reads the 402 and verifies it |
 | [`@x402identity/widget-core`](https://www.npmjs.com/package/@x402identity/widget-core) 0.7.0 | `planPayeeRecords` / `payeeWrites` / `readPayeeRecords`: the record writes and reads the wizard uses, for ENSv1 and ENSv2 names (`buildPayeeCalls` for ENSv1 only) |
 
@@ -369,7 +369,7 @@ node scripts/setup-viem.mjs
 
 | What | How |
 |------|-----|
-| Verifier unit tests | `cd packages/payee && npm test` (29 tests: records, default EVM and Solana, Lightning, expiry and grace on ENSv1 and ENSv2, failed reads) |
+| Verifier unit tests | `cd packages/payee && npm test` (30 tests: records, default EVM and Solana, Lightning, expiry and grace on ENSv1 and ENSv2, failed reads) |
 | Mint and record writes on a mainnet fork | `anvil --fork-url <mainnet rpc> --port 8547`, then `node scripts/fork-ensv2-check.mjs`: mints through the widget and site paths, writes records through `widget-core`, and verifies them through the official Universal Resolver |
 | Payee writes on real names | Same fork, `node scripts/fork-names-check.mjs` (`HOLDER` and `NAMES` env vars): writes payee records to ENSv1 and ENSv2 names as their holder, one transaction per resolver, and verifies each `payee-bound` |
 
@@ -502,7 +502,7 @@ $X402ID is a utility token. It is not an investment and carries no claim on reve
 | 10-25 | The availability endpoint's payee moves to `x402id.402api.eth`; ERC-8004 agent 98739 lists it |
 | 10-26 | Cashback round 1 paid on Base |
 | 10-27 | ENSv2 launch fix: write resolvers come from the ENS registry, not `findResolver` (**widget-core 0.6.1, payee 0.2.1, widget-react 0.6.1, mcp 0.3.2**; widget-react's dependency range corrected). The wizard lists names with the Alchemy NFT API instead of Etherscan, so it no longer hits Etherscan's rate limit |
-| 10-28 | `/verify` works for any .eth name, free: ENSv1 (wrapped, unwrapped, subnames) and ENSv2, with version badges and the "ENSv1 and ENSv2 ready" card. **widget-core 0.7.0, payee 0.3.0, widget-react 0.6.2, mcp 0.3.3**. Spec records the #36 decisions and the ENSv2 expiry rule |
+| 10-28 | `/verify` works for any .eth name, free: ENSv1 (wrapped, unwrapped, subnames) and ENSv2, with version badges and the "ENSv1 and ENSv2 ready" card. **widget-core 0.7.0, payee 0.3.0, widget-react 0.6.2, mcp 0.3.3**. Spec records the #36 decisions and the ENSv2 expiry rule. **payee 0.3.1**: a `.eth` name that was never registered says so in `detail` (suggested by the first outside implementer on #36) |
 
 ---
 

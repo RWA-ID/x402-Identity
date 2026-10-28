@@ -1,6 +1,6 @@
 {
   "name": "@x402identity/payee",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Verify the x402 payee-name extension: an ENS name binds the origin and payTo of a 402 challenge.",
   "license": "MIT",
   "type": "module",

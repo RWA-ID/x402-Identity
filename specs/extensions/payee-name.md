@@ -143,6 +143,8 @@ Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-
    - **registered** (an ENSv2 name): the registry's `getExpiry`, with ENSv2's 28-day grace period;
    - **reserved** (an ENSv1 name not migrated yet): BaseRegistrar `nameExpires`, with the 90-day grace period;
    - **available**: the name has been released and anyone can register it, so it is expired with no grace period left, even if fewer than 90 days have passed since its BaseRegistrar expiry.
+
+   A second-level name with no expiry on record (`available`, and `nameExpires` is 0) is not registered at all. The verdict is still `false`, `name-expired`, but `detail` SHOULD say so (`{"field": "<name>.eth", "expected": "registered", "got": "not registered"}`), so that a mistyped name can be told apart from one that lapsed.
 4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402. Listing an origin is an authorization by the name's owner, not a claim to control the host's DNS, so a tenant on a platform suffix can list its tenant origin. A verifier checks only `O` and never contacts the other listed origins, so an origin the operator has stopped serving cannot make a challenge fail.
 5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` (for an `eip155` network with no record of its own, the default EVM address) or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization; every other account compares exactly. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
 6. **Pass.** All checks hold for an accept → `true`, `payee-bound`, `accepts_index: i`.
@@ -179,7 +181,7 @@ A closed, append-only set, which no release renumbers or reuses:
 | `name-not-normalized` | `false` | `info.name` is not in ENSIP-15 normalized form. |
 | `origin-not-listed` | `false` | The contacted origin is not in `org.x402.origins`. `detail` carries the origin. |
 | `payto-not-listed` | `false` | The accept's `payTo` is not listed for its network. `detail` carries the network and address. |
-| `name-expired` | `false` | The name is past expiry and grace. |
+| `name-expired` | `false` | The name is past expiry and grace. `detail` says "not registered" when the `.eth` name has no expiry on record. |
 | `name-in-grace` | `inconclusive` | The name is inside the `.eth` grace period. |
 | `no-records` | `inconclusive` | The name resolved and none of the records are set. |
 | `resolution-failed` | `inconclusive` | Resolution did not complete. Never reported as `false`. |

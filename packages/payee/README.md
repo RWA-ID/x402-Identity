@@ -37,6 +37,8 @@ Then add to your 402 response:
 
 `true` / `false` / `"inconclusive"`, with a reason from a closed set: `payee-bound`, `name-not-normalized`, `origin-not-listed`, `payto-not-listed`, `name-expired`, `name-in-grace`, `no-records`, `resolution-failed`, `unsupported-name`.
 
+A name that was never registered is `name-expired` with `detail.got` = `"not registered"`, so a typo reads differently from a lapsed name.
+
 A failed read is always `inconclusive` / `resolution-failed`. It never reads as an unset record, including a CCIP-Read gateway that is down (viem's non-strict mode would report that as `null`). Expiry is judged on chain time, because an expired ENS name keeps resolving.
 
 ## Tests

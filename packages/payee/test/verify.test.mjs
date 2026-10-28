@@ -235,6 +235,15 @@ test("a released v1 name (grace 0) is expired at once, inside v1's 90 days", asy
   assert.equal(v.reason, "name-expired");
 });
 
+test("a name that was never registered is expired, with a detail saying so", async () => {
+  const [v] = await verifyPayee(challenge("weathr.402api.eth"), ORIGIN, v2Reader({ expiry: 0n, grace: 0n }, { wrapped: {} }));
+  assert.equal(v.verdict, false);
+  assert.equal(v.reason, "name-expired");
+  assert.deepEqual(v.detail, { field: "402api.eth", expected: "registered", got: "not registered" });
+  const [lapsed] = await verifyPayee(challenge("kafd.eth"), ORIGIN, v2Reader({ expiry: NOW - 74n * DAY, grace: 0n }));
+  assert.equal(lapsed.detail, undefined);
+});
+
 test("a reader without secondLevel keeps the v1 grace period", async () => {
   const [v] = await verifyPayee(challenge("weather.eth"), ORIGIN, reader({ slExpiry: NOW - 30n * DAY, wrapped: {} }));
   assert.equal(v.reason, "name-in-grace");
