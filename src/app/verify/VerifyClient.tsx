@@ -11,6 +11,7 @@ import { verifyPayee, viemReader, type PayeeVerdict } from "@x402identity/payee"
 import { SiteNav } from "@/components/SiteNav";
 import { BackgroundX } from "@/components/HeroX";
 import { useOwnedNames, checkNames, type NameEntry } from "@/hooks/useOwnedNames";
+import { EnsBadge, EnsReadyCard } from "@/components/EnsReady";
 import { useWritePayee } from "@/hooks/useWritePayee";
 import { readChallenge, readManifest, networkLabel, shortAddr, type Challenge, type Manifest } from "@/lib/challenge";
 import { LIGHTNING_MAINNET, SOLANA_MAINNET, normalizePayTo, payToPlaceholder } from "@/lib/payto";
@@ -239,6 +240,8 @@ export default function VerifyClient() {
     setSelected((s) => [...new Set([...s, ...preselect.filter((n) => usable.includes(n))])]);
   }, [preselect, owned]);
 
+  const versionOf = useMemo(() => new Map(allNames.map((n) => [n.name, n.version])), [allNames]);
+
   const toggle = (name: string) =>
     setSelected((s) => (s.includes(name) ? s.filter((n) => n !== name) : [...s, name]));
 
@@ -398,6 +401,7 @@ extensions: {
 
       <section className="section-divider verify-body">
         <div className="wrap">
+          <EnsReadyCard />
           <ol className="verify-steps">
             {STEPS.map((label, i) => (
               <li key={label} data-state={i === step ? "current" : i < step ? "done" : "todo"}>
@@ -442,6 +446,7 @@ extensions: {
                               onChange={() => toggle(n.name)}
                             />
                             <span className="mono">{n.name}</span>
+                            <EnsBadge version={n.version} />
                           </label>
                           {!n.ok && <span className="verify-name-reason">{n.reason}</span>}
                         </li>
@@ -489,7 +494,10 @@ extensions: {
                 const unreadable = c && (!c.readable || !c.accepts?.length);
                 return (
                   <div key={name} className="verify-endpoint">
-                    <div className="mono verify-name">{name}</div>
+                    <div className="verify-name-line">
+                      <span className="mono verify-name">{name}</span>
+                      <EnsBadge version={versionOf.get(name)} />
+                    </div>
                     <div className="input-row">
                       <input
                         className="label-input"
@@ -676,7 +684,10 @@ extensions: {
                 return (
                   <div key={name} className="verify-endpoint">
                     <div className="verify-row">
-                      <span className="mono verify-name">{name}</span>
+                      <span className="verify-name-line">
+                        <span className="mono verify-name">{name}</span>
+                        <EnsBadge version={versionOf.get(name)} />
+                      </span>
                       {verified && <span className="verify-badge">Verified payee</span>}
                     </div>
                     <div className="code-block verify-code">

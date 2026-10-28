@@ -270,7 +270,12 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
         }),
       ),
       anyEvm ? read(() => reader.addr(name, DEFAULT_EVM_COIN_TYPE)) : null,
-      read(() => reader.nameExpires(labels[labels.length - 2])),
+      read(() => {
+        const label = labels[labels.length - 2];
+        return reader.secondLevel
+          ? reader.secondLevel(label)
+          : reader.nameExpires(label).then((expiry) => ({ expiry, grace: ETH_GRACE_PERIOD }));
+      }),
       Promise.all(
         subnames.map(async (node) => {
           const owner = await read(() => reader.registryOwner(node));
@@ -287,8 +292,8 @@ async function resolveAll(reader: EnsReader, name: string, labels: string[], net
   // zeroes the owner once it passes. Without that fuse the expiry changes
   // nothing and the name lives as long as its parent. getData zeroes fuses
   // after expiry, so a passed expiry is recognized by the zeroed owner.
-  let at = secondLevelExpiry;
-  let grace = ETH_GRACE_PERIOD;
+  let at = secondLevelExpiry.expiry;
+  let grace = secondLevelExpiry.grace;
   for (const s of subnameData) {
     if (!s.data) continue;
     const ends =

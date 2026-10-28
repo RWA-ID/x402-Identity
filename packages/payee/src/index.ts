@@ -15,4 +15,4 @@ export {
   type PaymentRequiredLike,
   type Reason,
 } from "./verify.js";
-export { viemReader, ENS_REGISTRY, NAME_WRAPPER, BASE_REGISTRAR, type EnsReader } from "./reader.js";
+export { viemReader, ENS_REGISTRY, NAME_WRAPPER, BASE_REGISTRAR, ENSV2_ETH_REGISTRY, ENSV2_GRACE_PERIOD, type EnsReader } from "./reader.js";

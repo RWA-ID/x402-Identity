@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { MintDrawer } from "@/components/MintDrawer";
+import { EnsReadyCard } from "@/components/EnsReady";
 import { LiveMetrics } from "@/components/LiveMetrics";
 import { TokenSwap } from "@/components/TokenSwap";
 import { InlineX, BackgroundX } from "@/components/HeroX";
@@ -423,11 +424,14 @@ export default function Home() {
               <h2>Know who you&apos;re paying before you pay.</h2>
               <p>
                 A 402 response tells a client which address to pay. Nothing in it proves that address
-                belongs to the site that sent it. An x402 name closes that gap: the owner lists their
+                belongs to the site that sent it. An ENS name closes that gap: the owner lists their
                 origins and payTo addresses on the name, and any client can check a 402 against them.
+                Setting it up is free for any .eth name, an x402 name or one you already own.
               </p>
             </div>
           </div>
+
+          <EnsReadyCard />
 
           <div className="props" style={{ marginTop: 0 }}>
             <div className="prop">
@@ -478,6 +482,10 @@ export default function Home() {
             </div>
 
             <div className="fuse-list" style={{ marginTop: 0 }}>
+              <div className="fuse-row">
+                <div className="k">FREE</div>
+                <div className="v">No fee from us, for any .eth name on ENSv1 or ENSv2. Your wallet pays only Ethereum&apos;s network fee for the record write.</div>
+              </div>
               <div className="fuse-row">
                 <div className="k">LIVE</div>
                 <div className="v">Our own paid endpoint, api.x402id.dev, verifies as payee-bound through x402id.402api.eth.</div>

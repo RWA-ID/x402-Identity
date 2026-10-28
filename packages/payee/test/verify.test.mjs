@@ -213,3 +213,36 @@ test("a failed read of the default record is inconclusive", async () => {
   assert.equal(v.verdict, "inconclusive");
   assert.equal(v.reason, "resolution-failed");
 });
+
+/* ENSv2-aware expiry, via the optional secondLevel() reader method. */
+const DAY = 24n * 3600n;
+const v2Reader = (sl, extra = {}) => ({ ...reader(extra), secondLevel: () => Promise.resolve(sl) });
+
+test("ENSv2 name: its own expiry and a 28-day grace, not the v1 registrar's", async () => {
+  const [ok] = await verifyPayee(challenge("airep.eth"), ORIGIN, v2Reader({ expiry: NOW + YEAR, grace: 28n * DAY }, { slExpiry: NOW - YEAR }));
+  assert.equal(ok.reason, "payee-bound");
+  const [grace] = await verifyPayee(challenge("airep.eth"), ORIGIN, v2Reader({ expiry: NOW - 10n * DAY, grace: 28n * DAY }));
+  assert.equal(grace.verdict, "inconclusive");
+  assert.equal(grace.reason, "name-in-grace");
+  const [gone] = await verifyPayee(challenge("airep.eth"), ORIGIN, v2Reader({ expiry: NOW - 30n * DAY, grace: 28n * DAY }));
+  assert.equal(gone.verdict, false);
+  assert.equal(gone.reason, "name-expired");
+});
+
+test("a released v1 name (grace 0) is expired at once, inside v1's 90 days", async () => {
+  const [v] = await verifyPayee(challenge("kafd.eth"), ORIGIN, v2Reader({ expiry: NOW - 74n * DAY, grace: 0n }));
+  assert.equal(v.verdict, false);
+  assert.equal(v.reason, "name-expired");
+});
+
+test("a reader without secondLevel keeps the v1 grace period", async () => {
+  const [v] = await verifyPayee(challenge("weather.eth"), ORIGIN, reader({ slExpiry: NOW - 30n * DAY, wrapped: {} }));
+  assert.equal(v.reason, "name-in-grace");
+});
+
+test("a failed secondLevel read is inconclusive, never expired", async () => {
+  const r = { ...reader(), secondLevel: () => Promise.reject(new Error("throttled")) };
+  const [v] = await verifyPayee(challenge("airep.eth"), ORIGIN, r);
+  assert.equal(v.verdict, "inconclusive");
+  assert.equal(v.reason, "resolution-failed");
+});

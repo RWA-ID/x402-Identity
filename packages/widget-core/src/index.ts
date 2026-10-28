@@ -14,6 +14,7 @@ import { validateLabel } from "./validation.js";
 
 export { registrarAbi, forwarderAbi, validateLabel };
 export * from "./resolver.js";
+export * from "./ensv2.js";
 
 export interface X402Config {
   registrar: Address;

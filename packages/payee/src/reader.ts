@@ -26,6 +26,13 @@ export interface EnsReader {
   wrapperData(name: string): Promise<{ owner: Address; fuses: number; expiry: bigint }>;
   /** BaseRegistrar expiry of a .eth second-level name (without the grace period). */
   nameExpires(label: string): Promise<bigint>;
+  /**
+   * Expiry and grace period of a .eth second-level name, ENSv2-aware. Optional:
+   * a reader without it falls back to nameExpires and the ENSv1 grace period.
+   * An ENSv2 name has its own expiry and a 28-day grace; an unmigrated name that
+   * ENSv2 already lists as available has been released, so its grace is zero.
+   */
+  secondLevel?(label: string): Promise<{ expiry: bigint; grace: bigint }>;
   /** Whether the name's resolver implements ENSIP-10 (resolve(bytes,bytes)). */
   extendedResolver(name: string): Promise<boolean>;
 }
@@ -33,6 +40,20 @@ export interface EnsReader {
 export const ENS_REGISTRY = getAddress("0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e");
 export const NAME_WRAPPER = getAddress("0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401");
 export const BASE_REGISTRAR = getAddress("0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85");
+/** ENSv2's ETH registry: every .eth label, v2 names as registered, v1 names as reserved. */
+export const ENSV2_ETH_REGISTRY = getAddress("0xf60aba43E1f7F3DAB1186Ff03B561401C9Df85E2");
+const V2_AVAILABLE = 0;
+const V2_REGISTERED = 2;
+/** ENSv2's grace period for an expired .eth name. */
+export const ENSV2_GRACE_PERIOD = 28n * 24n * 60n * 60n;
+/** ENSv1's, for a name not migrated yet. */
+const ENSV1_GRACE_PERIOD = 90n * 24n * 60n * 60n;
+
+const ensV2RegistryAbi = [
+  { type: "function", name: "getStatus", stateMutability: "view", inputs: [{ name: "anyId", type: "uint256" }], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "getExpiry", stateMutability: "view", inputs: [{ name: "anyId", type: "uint256" }], outputs: [{ type: "uint64" }] },
+  { type: "function", name: "getResolver", stateMutability: "view", inputs: [{ name: "label", type: "string" }], outputs: [{ type: "address" }] },
+] as const;
 
 const registryAbi = [
   {
@@ -120,13 +141,31 @@ export function viemReader(client: PublicClient): EnsReader {
         functionName: "nameExpires",
         args: [BigInt(labelhash(label))],
       }),
+    async secondLevel(label) {
+      const id = BigInt(labelhash(label));
+      const status = Number(await client.readContract({ address: ENSV2_ETH_REGISTRY, abi: ensV2RegistryAbi, functionName: "getStatus", args: [id] }));
+      if (status === V2_REGISTERED) {
+        const expiry = await client.readContract({ address: ENSV2_ETH_REGISTRY, abi: ensV2RegistryAbi, functionName: "getExpiry", args: [id] });
+        return { expiry: BigInt(expiry), grace: ENSV2_GRACE_PERIOD };
+      }
+      const expiry = await client.readContract({ address: BASE_REGISTRAR, abi: baseRegistrarAbi, functionName: "nameExpires", args: [id] });
+      return { expiry, grace: status === V2_AVAILABLE ? 0n : ENSV1_GRACE_PERIOD };
+    },
     async extendedResolver(name) {
+      const labels = name.split(".");
+      let resolver: Address = zeroAddress;
+      // An ENSv2 name's resolver is the one the ETH registry holds for it.
+      if (labels.length === 2 && labels[1] === "eth") {
+        const status = Number(
+          await client.readContract({ address: ENSV2_ETH_REGISTRY, abi: ensV2RegistryAbi, functionName: "getStatus", args: [BigInt(labelhash(labels[0]))] }),
+        );
+        if (status === V2_REGISTERED)
+          resolver = await client.readContract({ address: ENSV2_ETH_REGISTRY, abi: ensV2RegistryAbi, functionName: "getResolver", args: [labels[0]] });
+      }
       // Since ENSv2 the Universal Resolver (and so getEnsResolver) reports the
       // ENSV1Resolver wrapper for every v1 name, and the wrapper is extended.
       // For a v1 name, take the resolver ENSIP-10 would use: the nearest one set
       // in the registry on the name or an ancestor, up to the second-level name.
-      const labels = name.split(".");
-      let resolver: Address = zeroAddress;
       for (let i = 0; i < labels.length - 1 && resolver === zeroAddress; i++) {
         resolver = await client.readContract({
           address: ENS_REGISTRY,

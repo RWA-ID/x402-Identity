@@ -3,22 +3,16 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { namehash } from "viem";
-import {
-  buildPayeeCalls,
-  getLowFees,
-  groupByResolver,
-  publicResolverAbi,
-  type PayeePlan,
-} from "@x402identity/widget-core";
+import { getLowFees, payeeWrites, publicResolverAbi, type PayeePlan } from "@x402identity/widget-core";
 import { writeChainId } from "@/lib/embedded";
 
 export type WritePayeeState = "idle" | "signing" | "confirming" | "written" | "failed";
 
 /**
  * Write the payee-name records for several names: one resolver multicall per
- * resolver, which is one signature when the names were all minted here. The
- * wallet must own every name.
+ * resolver, which is one signature when the names were all minted here. Each
+ * name's calls take the form its ENS version needs. The wallet must control
+ * every name.
  */
 export function useWritePayee() {
   const { chainId, connector } = useAccount();
@@ -36,17 +30,16 @@ export function useWritePayee() {
     setState("signing");
     try {
       if (chainId !== mainnet.id) await switchChainAsync({ chainId: mainnet.id });
-      const byName = new Map(plans.map((p) => [p.name, p.plan]));
-      const [groups, fees] = await Promise.all([groupByResolver(client, [...byName.keys()]), getLowFees(client)]);
-      for (const [resolver, names] of groups) {
+      const [writes, fees] = await Promise.all([payeeWrites(client, plans), getLowFees(client)]);
+      for (const w of writes) {
         setState("signing");
         const hash = await writeContractAsync({
           ...fees,
           chainId: writeChainId(connector, mainnet.id),
-          address: resolver,
+          address: w.resolver,
           abi: publicResolverAbi,
           functionName: "multicall",
-          args: [names.flatMap((n) => buildPayeeCalls(namehash(n), byName.get(n)!))],
+          args: [w.calls],
         });
         setHashes((h) => [...h, hash]);
         setState("confirming");

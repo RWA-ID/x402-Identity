@@ -8,6 +8,7 @@ import {
   namehash,
   zeroAddress,
 } from "viem";
+import { ensVersion, getV2Resolver } from "./ensv2.js";
 
 /**
  * Minting a subname sets its owner and resolver but writes NO address record,
@@ -120,19 +121,23 @@ function bytesToAddress(b: Hex): Address | null {
 }
 
 /**
- * The resolver configured for `name` itself in the ENS registry, looked up at
- * call time — never hardcoded or cached, since a name's resolver can change.
- * These are unmigrated ENSv1 names, so the registry entry is the resolver their
- * records are read from and written to. Throws if the name has no resolver of
- * its own: an inherited parent resolver would reject the holder's writes.
+ * The resolver configured for `name` itself, looked up at call time — never
+ * hardcoded or cached, since a name's resolver can change. An ENSv2 name's comes
+ * from the v2 ETH registry; every other name's from the ENSv1 registry, which is
+ * where an unmigrated name keeps the resolver its records are read from and
+ * written to. Throws if the name has no resolver of its own: an inherited parent
+ * resolver would reject the holder's writes.
  */
 export async function getResolver(publicClient: PublicClient, name: string): Promise<Address> {
-  const resolver = await publicClient.readContract({
-    address: ENS_REGISTRY,
-    abi: ensRegistryAbi,
-    functionName: "resolver",
-    args: [namehash(name)],
-  });
+  const resolver =
+    (await ensVersion(publicClient, name)) === "v2"
+      ? await getV2Resolver(publicClient, name)
+      : await publicClient.readContract({
+          address: ENS_REGISTRY,
+          abi: ensRegistryAbi,
+          functionName: "resolver",
+          args: [namehash(name)],
+        });
   if (resolver === zeroAddress) throw new Error(`${name} has no resolver of its own`);
   return getAddress(resolver);
 }

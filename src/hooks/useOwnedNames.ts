@@ -13,7 +13,7 @@ const CACHE_MS = 60_000;
 
 function cached(owner: Address): NameEntry[] | null {
   try {
-    const raw = sessionStorage.getItem(`x402id:owned:v1:${owner}`);
+    const raw = sessionStorage.getItem(`x402id:owned:2:${owner}`);
     if (!raw) return null;
     const { at, names } = JSON.parse(raw) as { at: number; names: NameEntry[] };
     return Date.now() - at < CACHE_MS ? names : null;
@@ -24,7 +24,7 @@ function cached(owner: Address): NameEntry[] | null {
 
 function remember(owner: Address, names: NameEntry[]) {
   try {
-    sessionStorage.setItem(`x402id:owned:v1:${owner}`, JSON.stringify({ at: Date.now(), names }));
+    sessionStorage.setItem(`x402id:owned:2:${owner}`, JSON.stringify({ at: Date.now(), names }));
   } catch {
     // storage blocked: the next visit just looks the names up again
   }
