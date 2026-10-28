@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { namehash, isAddress, type Address, type Hex } from "viem";
 import { mainnet } from "viem/chains";
 import { X402Widget, X402_THEMES, type X402Theme } from "@x402identity/widget-react";
+import { SITE_MAINNET_RPC } from "@/lib/alchemy";
 
 const FORWARDER: Address = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
-const RPC = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET;
+const RPC = SITE_MAINNET_RPC;
 
 const ALLOWED_PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"] as const;
 type ParentLabel = (typeof ALLOWED_PARENTS)[number];

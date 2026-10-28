@@ -4,6 +4,7 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { mainnet, base, type AppKitNetwork } from "@reown/appkit/networks";
 import { http } from "wagmi";
+import { SITE_BASE_RPC, SITE_MAINNET_RPC } from "./alchemy";
 
 export const PROJECT_ID =
   process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "43bdd1b8c477ac4d4a4264a14a8472f8";
@@ -11,8 +12,8 @@ export const PROJECT_ID =
 // Mainnet hosts the registrar; Base hosts $X402ID and its swap.
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet, base];
 
-const ALCHEMY_MAINNET = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET;
-const ALCHEMY_BASE = process.env.NEXT_PUBLIC_ALCHEMY_BASE;
+const ALCHEMY_MAINNET = SITE_MAINNET_RPC;
+const ALCHEMY_BASE = SITE_BASE_RPC;
 
 export const wagmiAdapter = new WagmiAdapter({
   networks,

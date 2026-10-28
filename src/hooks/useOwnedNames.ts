@@ -3,18 +3,13 @@
 import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { decodeAbiParameters, getAddress, namehash, parseAbiParameters, type Address } from "viem";
+import { getAddress, namehash, type Address } from "viem";
 import { ADDRESSES } from "@/lib/contracts";
+import { SITE_NFT_API } from "@/lib/alchemy";
 
-const TOPIC0_SUBNAME_MINTED = "0x8fd05628e8c8091170a3b692a1bcb11cf2b13b6020e3ff27b62753bfaa419b0d";
-const DATA_PARAMS = parseAbiParameters("string label, bytes32 subnameNode, uint256 fee");
-const ETHERSCAN_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || "";
-
-// Both registrars mint under the same parents; the old one is still where the
-// first names came from.
-const REGISTRARS: Address[] = [ADDRESSES.mainnet.registrar, "0x0a9b0d20e9193dc5479ab98154124f4e2f569444"];
 const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"];
-const PARENT_BY_NODE = new Map(PARENTS.map((p) => [namehash(p), p]));
+/** How long a wallet's list is reused, so leaving the page and coming back costs no call. */
+const CACHE_MS = 60_000;
 
 const ownerOfAbi = [
   {
@@ -26,33 +21,84 @@ const ownerOfAbi = [
   },
 ] as const;
 
-type EtherscanLog = { topics: string[]; data: `0x${string}` };
+type OwnedNft = { tokenId: string; name: string | null };
+type OwnedNftsPage = { ownedNfts?: { tokenId: string; name?: string | null }[]; pageKey?: string };
 
-async function mintedNames(): Promise<string[]> {
-  const names = new Set<string>();
-  for (const registrar of REGISTRARS) {
-    const url =
-      `https://api.etherscan.io/v2/api?chainid=1&module=logs&action=getLogs` +
-      `&address=${registrar}&topic0=${TOPIC0_SUBNAME_MINTED}&fromBlock=0&toBlock=latest` +
-      (ETHERSCAN_KEY ? `&apikey=${ETHERSCAN_KEY}` : "");
-    const json = (await (await fetch(url)).json()) as { status: string; message: string; result: EtherscanLog[] | string };
-    if (json.status !== "1" || !Array.isArray(json.result)) {
-      // "No records found" is an empty registrar, not a failure.
-      if (json.message === "No records found") continue;
-      throw new Error(typeof json.result === "string" ? json.result : "Could not list minted names");
+/** One Alchemy NFT API call, retried once after a short wait if it is throttled. */
+async function fetchJson(url: string): Promise<OwnedNftsPage> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    if (res.status === 429 && attempt === 0) {
+      await new Promise((r) => setTimeout(r, 1000));
+      continue;
     }
-    for (const log of json.result) {
-      const parent = PARENT_BY_NODE.get(log.topics[1] as `0x${string}`);
-      if (!parent) continue;
-      try {
-        const [label] = decodeAbiParameters(DATA_PARAMS, log.data);
-        names.add(`${label}.${parent}`);
-      } catch {
-        // an undecodable log is skipped; the manual add covers that name
-      }
-    }
+    if (!res.ok) throw new Error(`Name lookup failed (HTTP ${res.status})`);
+    return res.json();
   }
-  return [...names];
+}
+
+/** NameWrapper tokens the NFT index lists for `owner`, every page. */
+async function wrappedTokens(owner: Address): Promise<OwnedNft[]> {
+  if (!SITE_NFT_API) throw new Error("Name lookup isn't configured");
+  const out: OwnedNft[] = [];
+  let pageKey: string | undefined;
+  do {
+    const q = new URLSearchParams({ owner, withMetadata: "true", pageSize: "100" });
+    q.append("contractAddresses[]", ADDRESSES.mainnet.nameWrapper);
+    if (pageKey) q.set("pageKey", pageKey);
+    const json = await fetchJson(`${SITE_NFT_API}/getNFTsForOwner?${q}`);
+    for (const n of json.ownedNfts ?? []) out.push({ tokenId: n.tokenId, name: n.name ?? null });
+    pageKey = json.pageKey;
+  } while (pageKey);
+  return out;
+}
+
+/** A name the index has not labelled yet (a fresh mint), from ENS's metadata service. */
+async function nameFromMetadata(tokenId: string): Promise<string | null> {
+  try {
+    const hex = "0x" + BigInt(tokenId).toString(16).padStart(64, "0");
+    const res = await fetch(`https://metadata.ens.domains/mainnet/${ADDRESSES.mainnet.nameWrapper}/${hex}`);
+    return res.ok ? ((await res.json()).name ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Candidate x402 names for `owner`: wrapped names the index lists under one of
+ * the parents. A label is kept only if it hashes to its own token id, so a name
+ * the index mislabels can't stand in for another.
+ */
+async function candidateNames(owner: Address): Promise<string[]> {
+  const names: string[] = [];
+  for (const t of await wrappedTokens(owner)) {
+    const name = t.name || (await nameFromMetadata(t.tokenId));
+    if (!name) continue;
+    const parent = PARENTS.find((p) => name.endsWith(`.${p}`));
+    if (!parent || name.slice(0, -parent.length - 1).includes(".")) continue;
+    if (BigInt(namehash(name)) !== BigInt(t.tokenId)) continue;
+    names.push(name);
+  }
+  return names;
+}
+
+function cached(owner: Address): string[] | null {
+  try {
+    const raw = sessionStorage.getItem(`x402id:owned:${owner}`);
+    if (!raw) return null;
+    const { at, names } = JSON.parse(raw) as { at: number; names: string[] };
+    return Date.now() - at < CACHE_MS ? names : null;
+  } catch {
+    return null;
+  }
+}
+
+function remember(owner: Address, names: string[]) {
+  try {
+    sessionStorage.setItem(`x402id:owned:${owner}`, JSON.stringify({ at: Date.now(), names }));
+  } catch {
+    // storage blocked: the next visit just looks the names up again
+  }
 }
 
 export type OwnedNamesState =
@@ -61,9 +107,9 @@ export type OwnedNamesState =
   | { status: "failed"; error: string };
 
 /**
- * x402 names the wallet holds now. Minting events give the candidates; the
- * NameWrapper owner decides, so a name that was transferred in (or is held by
- * a Safe) is found and one transferred out is not.
+ * x402 names the wallet holds now. The NFT index gives the candidates; the
+ * NameWrapper owner decides, because an index can lag a transfer. A name that
+ * was transferred in (or is held by a Safe) is found and one transferred out is not.
  */
 export function useOwnedNames(owner: Address | undefined) {
   const client = usePublicClient({ chainId: mainnet.id });
@@ -75,10 +121,16 @@ export function useOwnedNames(owner: Address | undefined) {
       return;
     }
     let cancelled = false;
+    const me = getAddress(owner);
+    const hit = cached(me);
+    if (hit) {
+      setState({ status: "ready", names: hit });
+      return;
+    }
     setState({ status: "loading" });
     (async () => {
       try {
-        const candidates = await mintedNames();
+        const candidates = await candidateNames(me);
         const owners = await client.multicall({
           allowFailure: false,
           contracts: candidates.map((n) => ({
@@ -88,8 +140,8 @@ export function useOwnedNames(owner: Address | undefined) {
             args: [BigInt(namehash(n))] as const,
           })),
         });
-        const me = getAddress(owner);
         const names = candidates.filter((_, i) => getAddress(owners[i]) === me).sort();
+        remember(me, names);
         if (!cancelled) setState({ status: "ready", names });
       } catch (e) {
         if (!cancelled) setState({ status: "failed", error: (e as Error).message });

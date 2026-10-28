@@ -4,12 +4,13 @@ import { useState } from "react";
 import { namehash, parseEther, type Address } from "viem";
 import { mainnet } from "viem/chains";
 import { X402Widget, type X402Theme } from "@x402identity/widget-react";
+import { SITE_MAINNET_RPC } from "@/lib/alchemy";
 import { SiteNav } from "@/components/SiteNav";
 import { ChainStrip } from "@/components/ChainStrip";
 
 const FORWARDER: Address = "0x05af104ce913e7ef39799bfada871817d3761778";
 const REGISTRAR: Address = "0xeb9e9ea385fe28b51a3f9a7d93fb893e0a1f9633";
-const RPC = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET;
+const RPC = SITE_MAINNET_RPC;
 
 const PARENTS = [
   { label: "402bot.eth", desc: "Agents" },
