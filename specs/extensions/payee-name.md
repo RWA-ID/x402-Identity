@@ -110,7 +110,7 @@ The operator sets these on the name. All of them are standard ENS records, so an
 | `org.x402.payto` | text (ENSIP-5) | Space-separated CAIP-10 accounts, e.g. `eip155:8453:0xAbC…` | Authorizes any number of further `payTo` addresses. Optional. |
 | `agent-registration[<registry>][<agentId>]` | text ([ENSIP-25](https://docs.ens.domains/ensip/25)) | non-empty | Optional link to an ERC-8004 agent identity. Reported, never required. |
 
-The `org.x402.*` key names follow the ENSIP-5 reverse-DNS convention for service keys and **need the WG's agreement**. Their names should not be treated as settled before that.
+The `org.x402.*` key names follow the ENSIP-5 reverse-DNS convention for service keys. They were endorsed as written on [wg-identity#36](https://github.com/x402-foundation/wg-identity/issues/36#issuecomment-6458232352) (2026-10-28), together with exact origin matching (step 4) and CAIP-10 in `org.x402.payto` as the general rule for accounts without a coin type.
 
 ### Coin type from network
 
@@ -135,9 +135,14 @@ Records MAY be served through an ENSIP-10 wildcard resolver with EIP-3668 (CCIP-
 
 1. **Name.** Read `extensions["payee-name"].info.name`. If it is absent, the extension does not apply. If it is not ENSIP-15 normalized → `false`, `name-not-normalized`. If it is not under `.eth` → `inconclusive`, `unsupported-name`. This draft defines expiry only for the `.eth` registrar; DNS-imported names are future work.
 2. **Resolve** through the ENS Universal Resolver on Ethereum mainnet: `org.x402.origins`, `org.x402.payto`, `addr(coinType)` for each distinct accept `network`, and, when any accept is on an `eip155` network, the default EVM address `addr(0x80000000)`. A transport or RPC failure → `inconclusive`, `resolution-failed`. **A failed read MUST NOT be reported as an absent record.** A throttled RPC and an unset record look alike unless the verifier keeps them apart.
-3. **Expiry.** Compute the name's effective expiry: the earliest expiry along its path up to and including the `.eth` second-level name (NameWrapper expiry for wrapped names, BaseRegistrar `nameExpires` for the unwrapped second-level name). An expired ENS name **still resolves**, so this check cannot be skipped.
+3. **Expiry.** Compute the name's effective expiry: the earliest expiry along its path up to and including the `.eth` second-level name (NameWrapper expiry for wrapped names; for the second-level name, see below). An expired ENS name **still resolves**, so this check cannot be skipped.
    - past expiry and grace period → `false`, `name-expired`
    - inside the `.eth` grace period → `inconclusive`, `name-in-grace`
+
+   The second-level name's expiry and grace period depend on its ENS version, read from the ENSv2 ETH registry's `getStatus(labelhash)`:
+   - **registered** (an ENSv2 name): the registry's `getExpiry`, with ENSv2's 28-day grace period;
+   - **reserved** (an ENSv1 name not migrated yet): BaseRegistrar `nameExpires`, with the 90-day grace period;
+   - **available**: the name has been released and anyone can register it, so it is expired with no grace period left, even if fewer than 90 days have passed since its BaseRegistrar expiry.
 4. **Origin.** If `O` is not an exact member of `org.x402.origins` → `false`, `origin-not-listed`. This check stops a server from declaring a name it does not control. Without it, anyone can put a well-known name in a 402. Listing an origin is an authorization by the name's owner, not a claim to control the host's DNS, so a tenant on a platform suffix can list its tenant origin. A verifier checks only `O` and never contacts the other listed origins, so an origin the operator has stopped serving cannot make a challenge fail.
 5. **Payee, per accept.** For each `accepts[i]`, the `payTo` is authorized if it equals `addr(coinType(network))` (for an `eip155` network with no record of its own, the default EVM address) or `network:payTo` appears in `org.x402.payto`. EVM addresses compare case-insensitively after checksum normalization; every other account compares exactly. Otherwise → `false`, `payto-not-listed`, `accepts_index: i`.
 6. **Pass.** All checks hold for an accept → `true`, `payee-bound`, `accepts_index: i`.
