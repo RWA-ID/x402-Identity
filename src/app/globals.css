@@ -1202,6 +1202,8 @@ html:not([data-theme="dark"]) .arch-box::before {
 .verify-names li { border-bottom: 1px solid var(--line); }
 .verify-names label { display: flex; align-items: center; gap: 12px; padding: 12px 4px; cursor: pointer; font-size: 14px; }
 .verify-names input { width: 16px; height: 16px; accent-color: var(--accent); }
+.verify-names li.is-blocked label { cursor: default; color: var(--muted); }
+.verify-name-reason { display: block; padding: 0 4px 12px 32px; margin-top: -6px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
 
 .verify-endpoint { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
 .verify-name { font-size: 14px; color: var(--ink); margin-bottom: 10px; display: inline-block; }

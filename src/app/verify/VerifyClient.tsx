@@ -10,12 +10,11 @@ import { planPayeeRecords, readPayeeRecords, originOf, type PayeePlan } from "@x
 import { verifyPayee, viemReader, type PayeeVerdict } from "@x402identity/payee";
 import { SiteNav } from "@/components/SiteNav";
 import { BackgroundX } from "@/components/HeroX";
-import { useOwnedNames, holdsName } from "@/hooks/useOwnedNames";
+import { useOwnedNames, checkNames, type NameEntry } from "@/hooks/useOwnedNames";
 import { useWritePayee } from "@/hooks/useWritePayee";
 import { readChallenge, readManifest, networkLabel, shortAddr, type Challenge, type Manifest } from "@/lib/challenge";
 import { LIGHTNING_MAINNET, SOLANA_MAINNET, normalizePayTo, payToPlaceholder } from "@/lib/payto";
 
-const PARENTS = ["402bot.eth", "402api.eth", "402mcp.eth"];
 const STEPS = ["Choose names", "Link endpoints", "Verify"] as const;
 
 type Endpoint = {
@@ -213,7 +212,7 @@ export default function VerifyClient() {
 
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
-  const [extra, setExtra] = useState<string[]>([]);
+  const [extra, setExtra] = useState<NameEntry[]>([]);
   const [addInput, setAddInput] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [preselect, setPreselect] = useState<string[]>([]);
@@ -229,14 +228,15 @@ export default function VerifyClient() {
     if (raw) setPreselect(raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
   }, []);
 
-  const allNames = useMemo(
-    () => [...new Set([...(owned.status === "ready" ? owned.names : []), ...extra])],
-    [owned, extra],
-  );
+  const allNames = useMemo(() => {
+    const listed = owned.status === "ready" ? owned.names : [];
+    return [...listed, ...extra.filter((e) => !listed.some((l) => l.name === e.name))];
+  }, [owned, extra]);
 
   useEffect(() => {
     if (!preselect.length || owned.status !== "ready") return;
-    setSelected((s) => [...new Set([...s, ...preselect.filter((n) => owned.names.includes(n))])]);
+    const usable = owned.names.filter((e) => e.ok).map((e) => e.name);
+    setSelected((s) => [...new Set([...s, ...preselect.filter((n) => usable.includes(n))])]);
   }, [preselect, owned]);
 
   const toggle = (name: string) =>
@@ -251,21 +251,23 @@ export default function VerifyClient() {
       setAddError("That isn't a valid name.");
       return;
     }
-    if (!PARENTS.some((p) => name.endsWith(`.${p}`))) {
-      setAddError(`Use a name under ${PARENTS.join(", ")}.`);
+    if (!name.endsWith(".eth") || name.split(".").length < 2) {
+      setAddError("Use a .eth name, e.g. myagent.eth or pay.myagent.eth.");
       return;
     }
     if (!client || !address) return;
+    let entry: NameEntry;
     try {
-      if (!(await holdsName(client, name, address))) {
-        setAddError(`Your connected wallet doesn't hold ${name}.`);
-        return;
-      }
+      [entry] = await checkNames(client, [name], address);
     } catch {
-      setAddError("Couldn't check ownership just now — try again.");
+      setAddError("Couldn't check that name just now — try again.");
       return;
     }
-    setExtra((e) => [...new Set([...e, name])]);
+    if (!entry.ok) {
+      setAddError(`${name}: ${entry.reason}`);
+      return;
+    }
+    setExtra((e) => [...e.filter((x) => x.name !== name), entry]);
     setSelected((s) => [...new Set([...s, name])]);
     setAddInput("");
   };
@@ -424,28 +426,34 @@ extensions: {
                   )}
                   {owned.status === "ready" && allNames.length === 0 && (
                     <p className="verify-note">
-                      This wallet holds no names under 402bot.eth, 402api.eth or 402mcp.eth.{" "}
-                      <a href="/" className="verify-link">Mint one</a>, or add a name you hold below.
+                      This wallet holds no .eth names.{" "}
+                      <a href="/" className="verify-link">Mint one</a>, or add a name you control below.
                     </p>
                   )}
                   {allNames.length > 0 && (
                     <ul className="verify-names">
                       {allNames.map((n) => (
-                        <li key={n}>
+                        <li key={n.name} className={n.ok ? undefined : "is-blocked"}>
                           <label>
-                            <input type="checkbox" checked={selected.includes(n)} onChange={() => toggle(n)} />
-                            <span className="mono">{n}</span>
+                            <input
+                              type="checkbox"
+                              disabled={!n.ok}
+                              checked={n.ok && selected.includes(n.name)}
+                              onChange={() => toggle(n.name)}
+                            />
+                            <span className="mono">{n.name}</span>
                           </label>
+                          {!n.ok && <span className="verify-name-reason">{n.reason}</span>}
                         </li>
                       ))}
                     </ul>
                   )}
-                  <label className="field-label" htmlFor="add-name" style={{ marginTop: 24 }}>Add a name you hold</label>
+                  <label className="field-label" htmlFor="add-name" style={{ marginTop: 24 }}>Add a name you control</label>
                   <div className="input-row">
                     <input
                       id="add-name"
                       className="label-input"
-                      placeholder="myagent.402bot.eth"
+                      placeholder="myagent.eth"
                       value={addInput}
                       onChange={(e) => setAddInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addName()}
