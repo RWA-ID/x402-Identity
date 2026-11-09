@@ -206,6 +206,7 @@ A closed, append-only set, which no release renumbers or reuses:
 
 - A client MAY require `payee-bound` before signing, MAY only display the name, or MAY ignore the extension. The extension mandates no payment policy.
 - `inconclusive` MUST NOT be presented as a failed binding.
+- A client that requires `payee-bound` does not pay on `inconclusive`: it holds the payment. It MUST NOT record the hold as an exclusion of the payee. When the reason is `resolution-failed` it MAY retry within the challenge's `maxTimeoutSeconds`. The other `inconclusive` reasons (`name-in-grace`, `no-records`, `unsupported-name`) depend on the name itself, so an immediate retry returns the same result.
 - When it is shown to a user, the name MUST be the verified name, never the declared one, and only after `payee-bound`.
 - Results MAY be cached for at most the challenge's `maxTimeoutSeconds`, keyed by `(name, origin, network, payTo)`.
 - A verdict describes the name at `checked_at`, nothing later. Records, fuses and expiry can all change after it, so a stored verdict MUST keep `checked_at` and `expires_at` with it and MUST NOT be read as a statement about any later time. A `parent_can_control: false` recorded today says nothing about the name after its `expires_at`.
@@ -227,7 +228,7 @@ A closed, append-only set, which no release renumbers or reuses:
 - **Lookalikes:** step 1 refuses non-normalized names. Rendering the name for humans should follow ENSIP-15 display guidance.
 - **Parent control:** subnames whose parent can still control them can be rewritten by the parent. `parent_can_control` exposes this.
 - **Resolver trust:** CCIP-Read moves record authority to a gateway signer the owner chose. `extended_resolver` shows a name whose resolver can do this.
-- **Liveness:** verification needs an Ethereum mainnet read. A client that cannot reach one gets `inconclusive`, which MUST NOT block payment by default.
+- **Liveness:** verification needs an Ethereum mainnet read. A client that cannot reach one gets `inconclusive`, which MUST NOT block payment in a client that does not require `payee-bound`. A client that requires it holds instead (see Client guidance).
 
 ## Relationship to other work
 
