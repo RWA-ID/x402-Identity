@@ -253,7 +253,8 @@ extensions: {
 
 | Package | Use |
 |---------|-----|
-| [`@x402identity/payee`](https://www.npmjs.com/package/@x402identity/payee) 0.3.2 | `verifyPayee(paymentRequired, origin, reader)`: one verdict per payment option, `true` / `false` / `"inconclusive"` with a reason |
+| [`@x402identity/payee`](https://www.npmjs.com/package/@x402identity/payee) 0.4.0 | `verifyPayee(paymentRequired, origin, reader)`: one verdict per payment option, `true` / `false` / `"inconclusive"` with a reason |
+| `@x402identity/payee/priors` (0.4.0) | `payeeCheck({ reader })`: a `beforePay` hook for [`@priors/x402`](https://github.com/priors-agents/priors)'s `createPayer` that refuses a payee whose name does not hold, before anything is signed. Needs the `@priors/x402` release with [priors#26](https://github.com/priors-agents/priors/pull/26). [Docs](packages/payee/README.md#check-payees-before-paying-with-priors-x402identitypayeepriors) |
 | [`@x402identity/mcp`](https://www.npmjs.com/package/@x402identity/mcp) 0.3.3 | `verify_payee` tool: give it a URL, it reads the 402 and verifies it |
 | [`@x402identity/widget-core`](https://www.npmjs.com/package/@x402identity/widget-core) 0.7.0 | `planPayeeRecords` / `payeeWrites` / `readPayeeRecords`: the record writes and reads the wizard uses, for ENSv1 and ENSv2 names (`buildPayeeCalls` for ENSv1 only) |
 
